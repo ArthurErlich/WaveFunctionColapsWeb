@@ -1,6 +1,6 @@
 "use strict";
 const body = document.body;
-let canvasSize = 800;
+let canvasSize = 400;
 let gridSize = 2;
 let tileElement = new Array(gridSize * gridSize);
 //Tiles
@@ -79,6 +79,7 @@ function createtileElement(size, index) {
     fillTileElment(tileList[Math.floor(Math.random() * tileList.length)], tileElement); //colaps tile
     tileElement.setAttribute("id", "frame");
     tileElement.dataset.index = index.toString();
+    tileElement.dataset.entropy = tileList.length.toString();
     tileElement.dataset.colapsed = "false";
     tileElement.style.width = tileElementSize - 2 + "px";
     tileElement.style.height = tileElementSize - 2 + "px";
@@ -101,4 +102,20 @@ function fillTileElment(tile, tileElement) {
 }
 function changetileElement(index) {
     tileElement[index].style.backgroundColor = "red";
+}
+function colapseTile() {
+    for (let i = 0; i < tileList.length; i++) {
+        if (tileElement[i].dataset.colapsed == "false") {
+            console.log(indexWithLeastEntropy());
+        }
+    }
+    function indexWithLeastEntropy() {
+        let least = tileElement.length;
+        for (let i = 0; i < tileList.length; i++) {
+            if (parseInt(tileElement[i].dataset.entropy) < least) {
+                least = i;
+            }
+        }
+        return tileElement[least];
+    }
 }

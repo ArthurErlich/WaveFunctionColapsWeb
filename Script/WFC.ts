@@ -1,6 +1,6 @@
 const body: HTMLElement = document.body;
 
-let canvasSize: number = 800;
+let canvasSize: number = 400;
 let gridSize: number = 2;
 let tileElement: HTMLElement[] = new Array(gridSize * gridSize);
 
@@ -110,6 +110,7 @@ function createtileElement(size: number, index: number): HTMLElement {
 
     tileElement.setAttribute("id", "frame");
     tileElement.dataset.index = index.toString();
+    tileElement.dataset.entropy = tileList.length.toString();
     tileElement.dataset.colapsed = "false";
 
 
@@ -137,4 +138,21 @@ function fillTileElment(tile: Tile, tileElement: HTMLElement) {
 
 function changetileElement(index: number) {
     tileElement[index].style.backgroundColor = "red";
+}
+function colapseTile():void{
+    for(let i:number = 0; i < tileList.length;i++){
+        if(tileElement[i].dataset.colapsed == "false"){
+            console.log(indexWithLeastEntropy());
+             
+        }
+    }
+function indexWithLeastEntropy():HTMLElement{
+    let least:number = tileElement.length;
+
+    for(let i:number = 0; i < tileList.length;i++){
+        if(parseInt(tileElement[i].dataset.entropy) < least){
+            least = i;
+        }
+    }
+    return tileElement[least];
 }

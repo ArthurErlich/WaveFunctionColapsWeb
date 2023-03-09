@@ -3,6 +3,7 @@ const body: HTMLElement = document.body;
 let canvasSize: number = 400;
 let gridSize: number = 2;
 let tileElement: HTMLElement[] = new Array(gridSize * gridSize);
+let tileElementList:TileElement[] = new Array(gridSize*gridSize);
 
 
 //Tiles
@@ -34,6 +35,28 @@ class TRot {
         this.rotation = rotation;
     }
 }
+class TileElement {
+    public colapsed:boolean = false;
+    public rotation:number;
+    public entropy:number;
+    public possibleTiles:Tile[];
+
+    public isColapsed():boolean{
+        return this.colapsed;
+    }
+    public getEntropy():number{
+        return this.entropy;
+    }
+    public getPossibleTiles(index:number):Tile{
+        return this.possibleTiles[index];
+    }
+
+    constructor(rotation:number,entropy:number,possibleTiles:Tile[]){
+        this.rotation=rotation;
+        this.entropy=entropy;
+        this.possibleTiles = possibleTiles;
+    }
+}
 const tileList: Tile[] = [
     //Blank
     new Tile(0, "../images/blank.png",
@@ -44,16 +67,16 @@ const tileList: Tile[] = [
 
     //Stright
     new Tile(0, "../images/stright.png",
-        [new TRot(0, 0)], //up
+        [new TRot(1, 0)], //up
         [new TRot(0, 0)], //right
-        [new TRot(0, 0)], //down
+        [new TRot(1, 0)], //down
         [new TRot(0, 0)]), //left
 
 
     new Tile(1, "../images/stright.png",
         [new TRot(0, 0)], //up
-        [new TRot(0, 0)], //right
-        [new TRot(0, 0)], //down
+        [new TRot(1, 1)], //right
+        [new TRot(1, 1)], //down
         [new TRot(0, 0)]), //left
 
     //Corner
@@ -65,6 +88,7 @@ const tileList: Tile[] = [
 
 ];
 
+
 const canvas: HTMLElement = setUpCanvas();
 setGrid(gridSize);
 
@@ -73,8 +97,12 @@ canvas.addEventListener("click", (event: MouseEvent) => {
         canvas.innerHTML = "";
         setGrid(gridSize);
         console.log("Gridsize changed to: " + gridSize);
-
     }
+    console.log("start WVC");
+    //colapseTile();
+    console.log(tileElementList);
+    
+    
 });
 
 
@@ -106,7 +134,9 @@ function createtileElement(size: number, index: number): HTMLElement {
     const tileElementSize: number = canvasSize / size;
     const tileElement: HTMLElement = document.createElement("div");
 
-    fillTileElment(tileList[Math.floor(Math.random() * tileList.length)], tileElement);//colaps tile
+    fillTileElment(tileList[Math.floor(Math.random() * tileList.length)], tileElement);//colaps tile needed
+
+    tileElementList[index] = new TileElement(0,tileElementList.length,tileList,);
 
     tileElement.setAttribute("id", "frame");
     tileElement.dataset.index = index.toString();
@@ -120,14 +150,15 @@ function createtileElement(size: number, index: number): HTMLElement {
     tileElement.style.border = "1px solid black";
     tileElement.style.flex;
     tileElement.addEventListener("click", () => {
-        console.log("tileElement clicked: " + tileElement.dataset.index + "\n"
+        /*console.log("tileElement clicked: " + tileElement.dataset.index + "\n"
             + "colapsed: " + tileElement.dataset.colapsed + "\n"
-            + "rotation: " + parseInt(tileElement.dataset.rotation) * 90 + "°") // parseInt(tileElement.dataset.rotation) * 90 + "°" -> undefined?!
+            + "rotation: " + parseInt(tileElement.dataset.rotation!) * 90 + "°") // parseInt(tileElement.dataset.rotation) * 90 + "°" -> undefined?!*/
 
     });
 
     return tileElement;
 }
+// to class!
 function fillTileElment(tile: Tile, tileElement: HTMLElement) {
     tileElement.style.backgroundImage = "url(" + tile.imageURL + ")";
     tileElement.style.backgroundPosition = "center";
@@ -136,23 +167,28 @@ function fillTileElment(tile: Tile, tileElement: HTMLElement) {
     tileElement.dataset.elemnt = tile.imageURL;
 }
 
-function changetileElement(index: number) {
-    tileElement[index].style.backgroundColor = "red";
-}
+
 function colapseTile():void{
     for(let i:number = 0; i < tileList.length;i++){
-        if(tileElement[i].dataset.colapsed == "false"){
-            console.log(indexWithLeastEntropy());
+        if(!tileElementList[i].isColapsed()){
+            console.log("tile wiht least entropy "+indexWithLeastEntropy());
              
         }
     }
+}
 function indexWithLeastEntropy():HTMLElement{
-    let least:number = tileElement.length;
+    let least:number = tileElementList.length;
+
+    //-> instand of setting entropy. just use the list of possible tieles
 
     for(let i:number = 0; i < tileList.length;i++){
-        if(parseInt(tileElement[i].dataset.entropy) < least){
+
+        if(tileElementList[i].getEntropy() < least){
             least = i;
+            console.log(least);
         }
     }
     return tileElement[least];
 }
+
+//fix tileList -> make objetct to save the Entropy and if the tile is collapsed

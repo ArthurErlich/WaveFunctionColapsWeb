@@ -60,16 +60,16 @@ const tileList: Tile[] = [
     //Blank
     new Tile(0, "../images/blank.png",
         [new TRot(0, 0)], //up
-        [new TRot(0, 0),new TRot(1, 0)], //right
+        [new TRot(0, 0), new TRot(1, 0)], //right
         [new TRot(0, 0)], //down
-        [new TRot(0, 0),new TRot(1, 0)]), //left
+        [new TRot(0, 0), new TRot(1, 0)]), //left
 
     //Stright
     new Tile(0, "../images/stright.png",
         [new TRot(1, 0)], //up
-        [new TRot(0, 0),new TRot(1, 0)], //right
+        [new TRot(0, 0), new TRot(1, 0)], //right
         [new TRot(1, 0)], //down
-        [new TRot(0, 0),new TRot(1, 0)]), //left
+        [new TRot(0, 0), new TRot(1, 0)]), //left
 
     /*
     new Tile(1, "../images/stright.png",
@@ -99,7 +99,7 @@ canvas.addEventListener("click", (event: MouseEvent) => {
     }
     colapsTileOne();
     console.log("start WVC");
-    console.log(tileElementList);
+    //console.log(tileElementList);
     colapse();
     checkNeigbors(0);
 });
@@ -209,8 +209,22 @@ function checkNeigbors(index: number): void {
     //check left
     if (index % gridSize !== 0) {
         console.log("checkin " + (index - 1));
-        let tileLeft: TileElement = tileElementList[index];
-        let tileRight: TileElement = tileElementList[index - 1];
+
+        let selectedTile: TileElement = tileElementList[index];
+        let tileLeft: TileElement = tileElementList[index - 1];
+
+        let tileRightElements: Tile[] = [];
+
+        //Chekc the if the tile is possilbe on the left
+        selectedTile.possibleTiles.forEach(selection => {
+            tileLeft.possibleTiles.forEach(left => {
+                if (selection.left === left.right) {
+                }
+                tileRightElements.push(left);
+            });
+        });
+        // console.log(tileRightElements);
+
     } else {
         console.log("border");
     }
@@ -218,14 +232,8 @@ function checkNeigbors(index: number): void {
     //check right
     if ((index + 1) % gridSize !== 0) {
         console.log("cheking " + (index + 1));
-        let tileLeft: TileElement = tileElementList[index];
-        let tileRight: TileElement = tileElementList[index + 1];
 
-        let tile = tileLeft.possibleTiles[0].right;
-        
 
-        console.log(tile);
-    
 
     } else {
         console.log("border");
@@ -243,11 +251,42 @@ function checkNeigbors(index: number): void {
     if (index < gridSize * (gridSize - 1)) {
         console.log("checking " + (index + gridSize));
 
+        let selectedTile: TileElement = tileElementList[index];
+        let tileDown: TileElement = tileElementList[index + gridSize];
+
+        let tileDownElements: TRot[] = [];
+
+        //Chekc the if the tile is possilbe on the right
+
+        //This are the posssabilities
+        for (let i: number = 0; i < selectedTile.possibleTiles.length; i++) {
+            //get all the tilese of the checked tile
+            for (let s: number = 0; s < tileDown.possibleTiles.length; s++) {
+                let downAccepted = selectedTile.possibleTiles[i].down;
+                let upAcceptetd = tileDown.possibleTiles[s].up;
+
+
+                /// only tile 1 is right? Which is wrong!
+                upAcceptetd.forEach(up => {
+                    downAccepted.forEach(down => {
+                        if(down.tile === up.tile && down.rotation === up.rotation){
+                            console.log("-----");
+                            console.log(up);
+                            console.log("-----");
+                        }
+                    });
+                });
+            }
+        }
+        console.log("-----");
+        console.log(tileDownElements);
+
     } else {
         console.log("border");
 
     }
 
 }
+
 
 //fix tileList -> make objetct to save the Entropy and if the tile is collapsed

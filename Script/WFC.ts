@@ -3,7 +3,7 @@ const body: HTMLElement = document.body;
 let canvasSize: number = 400;
 let gridSize: number = 2;
 let tileElement: HTMLElement[] = new Array(gridSize * gridSize);
-let tileElementList:TileElement[] = new Array(gridSize*gridSize);
+let tileElementList: TileElement[] = new Array(gridSize * gridSize);
 
 
 //Tiles
@@ -36,43 +36,42 @@ class TRot {
     }
 }
 class TileElement {
-    public colapsed:boolean = false;
-    public rotation:number;
-    public entropy:number;
-    public possibleTiles:Tile[];
+    public colapsed: boolean = false;
+    public rotation: number;
+    public possibleTiles: Tile[];
 
-    public isColapsed():boolean{
+    public isColapsed(): boolean {
         return this.colapsed;
     }
-    public getEntropy():number{
-        return this.entropy;
+    public getEntropy(): number {
+        return this.possibleTiles.length;
     }
-    public getPossibleTiles(index:number):Tile{
+    public getPossibleTiles(index: number): Tile {
         return this.possibleTiles[index];
     }
 
-    constructor(rotation:number,entropy:number,possibleTiles:Tile[]){
-        this.rotation=rotation;
-        this.entropy=entropy;
+    constructor(rotation: number, possibleTiles: Tile[]) {
+        this.rotation = rotation;
         this.possibleTiles = possibleTiles;
     }
 }
 const tileList: Tile[] = [
+    //Kreate a list for better fisualisation- maybe a JSON file?
     //Blank
     new Tile(0, "../images/blank.png",
         [new TRot(0, 0)], //up
-        [new TRot(0, 0)], //right
+        [new TRot(0, 0),new TRot(1, 0)], //right
         [new TRot(0, 0)], //down
-        [new TRot(0, 0)]), //left
+        [new TRot(0, 0),new TRot(1, 0)]), //left
 
     //Stright
     new Tile(0, "../images/stright.png",
         [new TRot(1, 0)], //up
-        [new TRot(0, 0)], //right
+        [new TRot(0, 0),new TRot(1, 0)], //right
         [new TRot(1, 0)], //down
-        [new TRot(0, 0)]), //left
+        [new TRot(0, 0),new TRot(1, 0)]), //left
 
-
+    /*
     new Tile(1, "../images/stright.png",
         [new TRot(0, 0)], //up
         [new TRot(1, 1)], //right
@@ -80,12 +79,12 @@ const tileList: Tile[] = [
         [new TRot(0, 0)]), //left
 
     //Corner
-    new Tile(0, "../images/corner.png",
+    /*new Tile(0, "../images/corner.png",
         [new TRot(0, 0)], //up
         [new TRot(0, 0)], //right
         [new TRot(0, 0)], //down
         [new TRot(0, 0)]), //left
-
+*/
 ];
 
 
@@ -98,18 +97,18 @@ canvas.addEventListener("click", (event: MouseEvent) => {
         setGrid(gridSize);
         console.log("Gridsize changed to: " + gridSize);
     }
+    colapsTileOne();
     console.log("start WVC");
-    //colapseTile();
     console.log(tileElementList);
-    
-    
+    colapse();
+    checkNeigbors(0);
 });
 
 
 function setUpCanvas(): HTMLElement {
     const canvas: HTMLElement = document.createElement("div");
     canvas.setAttribute("id", "canvas");
-    console.log(canvas);
+    //console.log(canvas);
 
     canvas.style.width = canvasSize + "px";
     canvas.style.height = canvasSize + "px";
@@ -122,10 +121,16 @@ function setUpCanvas(): HTMLElement {
 }
 
 function setGrid(size: number): void {
+    //console.log("genGridSize: "+ size*size);
+
     tileElement = new Array(size * size);
+    let i: number = 0;
     for (let x: number = 0; x < size; x++) {
         for (let y: number = 0; y < size; y++) {
-            tileElement[x + y] = canvas.appendChild(createtileElement(size, x + y));
+            tileElement[i] = canvas.appendChild(createtileElement(size, i));
+            //console.log("genTile: "+ (i));
+            i++;
+
         }
     }
 }
@@ -134,9 +139,7 @@ function createtileElement(size: number, index: number): HTMLElement {
     const tileElementSize: number = canvasSize / size;
     const tileElement: HTMLElement = document.createElement("div");
 
-    fillTileElment(tileList[Math.floor(Math.random() * tileList.length)], tileElement);//colaps tile needed
-
-    tileElementList[index] = new TileElement(0,tileElementList.length,tileList,);
+    tileElementList[index] = new TileElement(0, tileList,);
 
     tileElement.setAttribute("id", "frame");
     tileElement.dataset.index = index.toString();
@@ -150,6 +153,8 @@ function createtileElement(size: number, index: number): HTMLElement {
     tileElement.style.border = "1px solid black";
     tileElement.style.flex;
     tileElement.addEventListener("click", () => {
+        console.log((tileElementList[parseInt(tileElement.dataset.index!)]).getPossibleTiles);
+
         /*console.log("tileElement clicked: " + tileElement.dataset.index + "\n"
             + "colapsed: " + tileElement.dataset.colapsed + "\n"
             + "rotation: " + parseInt(tileElement.dataset.rotation!) * 90 + "°") // parseInt(tileElement.dataset.rotation) * 90 + "°" -> undefined?!*/
@@ -160,6 +165,7 @@ function createtileElement(size: number, index: number): HTMLElement {
 }
 // to class!
 function fillTileElment(tile: Tile, tileElement: HTMLElement) {
+    console.log("filling Tile");
     tileElement.style.backgroundImage = "url(" + tile.imageURL + ")";
     tileElement.style.backgroundPosition = "center";
     tileElement.style.transform = "rotate(" + tile.rotation * 90 + "deg)"
@@ -167,28 +173,82 @@ function fillTileElment(tile: Tile, tileElement: HTMLElement) {
     tileElement.dataset.elemnt = tile.imageURL;
 }
 
+function colapsTileOne(): void {
+    let tile: TileElement = tileElementList[0];
+    tile.possibleTiles = new Array(tileList[1]);
+    tile.colapsed = true;
+}
 
-function colapseTile():void{
-    for(let i:number = 0; i < tileList.length;i++){
-        if(!tileElementList[i].isColapsed()){
-            console.log("tile wiht least entropy "+indexWithLeastEntropy());
-             
+function colapse(): void {
+    for (let i: number = 0; i < tileList.length; i++) {
+        if (!tileElementList[i].isColapsed()) {
+        } else {
+            fillTileElment(tileList[Math.floor(Math.random() * tileList.length)], tileElement[0]);
         }
     }
 }
-function indexWithLeastEntropy():HTMLElement{
-    let least:number = tileElementList.length;
+function indexWithLeastEntropy(): TileElement {
+    let least: number = tileElementList.length;
+    console.log(least);
+
 
     //-> instand of setting entropy. just use the list of possible tieles
+    //console.log(tileElementList[0].getEntropy());
 
-    for(let i:number = 0; i < tileList.length;i++){
+    for (let i: number = 0; i < tileList.length; i++) {
 
-        if(tileElementList[i].getEntropy() < least){
+        if (tileElementList[i].getEntropy() < least) {
             least = i;
-            console.log(least);
         }
     }
-    return tileElement[least];
+    if (tileElement) { }
+
+    return tileElementList[0];
 }
+function checkNeigbors(index: number): void {
+    //check left
+    if (index % gridSize !== 0) {
+        console.log("checkin " + (index - 1));
+        let tileLeft: TileElement = tileElementList[index];
+        let tileRight: TileElement = tileElementList[index - 1];
+    } else {
+        console.log("border");
+    }
+
+    //check right
+    if ((index + 1) % gridSize !== 0) {
+        console.log("cheking " + (index + 1));
+        let tileLeft: TileElement = tileElementList[index];
+        let tileRight: TileElement = tileElementList[index + 1];
+
+        let tile = tileLeft.possibleTiles[0].right;
+        
+
+        console.log(tile);
+    
+
+    } else {
+        console.log("border");
+    }
+
+    // check up
+    if (index >= gridSize) {
+        console.log("checking " + (index - gridSize));
+
+    } else {
+        console.log("border");
+    }
+
+    // check down
+    if (index < gridSize * (gridSize - 1)) {
+        console.log("checking " + (index + gridSize));
+
+    } else {
+        console.log("border");
+
+    }
+
+}
+
 
 //fix tileList -> make objetct to save the Entropy and if the tile is collapsed

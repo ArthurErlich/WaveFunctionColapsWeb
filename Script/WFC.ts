@@ -250,5 +250,4 @@ function checkNeigbors(index: number): void {
 
 }
 
-
 //fix tileList -> make objetct to save the Entropy and if the tile is collapsed

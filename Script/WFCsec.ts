@@ -7,14 +7,24 @@ namespace WFC2 {
     }
     class Tile {
         rotation: number;
-        image: string;
+        image?: string;
+        index:number;
 
-        up: Set<Tile>;
-        right: Set<Tile>;
-        down: Set<Tile>;
-        left: Set<Tile>;
+        up?: Set<Tile>;
+        right?: Set<Tile>;
+        down?: Set<Tile>;
+        left?: Set<Tile>;
 
-        constructor(rotation: number, image: string, up: Set<Tile>, right: Set<Tile>, down: Set<Tile>, left: Set<Tile>,) {
+        constructor(
+            index:number,
+            rotation: number,
+            image?: string, 
+            up?: Set<Tile>,
+            right?: Set<Tile>,
+            down?: Set<Tile>,
+            left?: Set<Tile>,) {
+
+            this.index = index;
             this.rotation = rotation;
             this.image = image;
             this.up = up;
@@ -33,18 +43,18 @@ namespace WFC2 {
 
     const frames: Frame[] = new Array(frameLength * frameLength);
     const tiles: Tile[] = [
-
         //StrightTile
-        new Tile(
-            0,".//images/stright.png",
-        new Set<Tile>()),
-        new Tile()
-
+        new Tile(0,0, ".//images/stright.png")
     ];
+
+    //setting compatible options for Tiles
+    tiles[0].up = new Set<Tile>([tiles[0]]);
 
 
     setup();
     draw();
+    console.log(frames);
+    
 
 
     function setup(): void {
@@ -70,7 +80,7 @@ namespace WFC2 {
         let index: number = 0;
         for (let x: number = 0; x < canvasDIM; x++) {
             for (let y: number = 0; y < canvasDIM; y++) {
-                frames[index] = new Frame();
+                frames[index] = new Frame(tiles);
                 index++;
             }
         }

@@ -1,27 +1,44 @@
 "use strict";
 var WFC2;
 (function (WFC2) {
+    class Frame {
+        constructor(options) {
+            this.options = options;
+        }
+    }
+    class Tile {
+        constructor(index, rotation, image, up, right, down, left) {
+            this.index = index;
+            this.rotation = rotation;
+            this.image = image;
+            this.up = up;
+            this.right = right;
+            this.down = down;
+            this.left = left;
+        }
+    }
     const canvasDIM = 600;
     const frameLength = 2;
     //Canvas and Frames setup
     const canvas = document.createElement("div");
     const frameElements = new Array(frameLength * frameLength);
     const frames = new Array(frameLength * frameLength);
+    const tiles = [
+        //StrightTile
+        new Tile(0, 0, ".//images/stright.png")
+    ];
+    //setting compatible options for Tiles
+    tiles[0].up = new Set([tiles[0]]);
     setup();
     draw();
-    class Frame {
-        constructor() { }
-    }
-    class Tile {
-        constructor() { }
-    }
-    const tiles = [new Tile()];
+    console.log(frames);
     function setup() {
         createCanvas();
         createFrames();
+        createFrameElement();
     }
     function draw() {
-        createFrameElement();
+        //drawFrame(TILE);
     }
     function createCanvas() {
         canvas.setAttribute("id", "canvas");
@@ -36,7 +53,7 @@ var WFC2;
         let index = 0;
         for (let x = 0; x < canvasDIM; x++) {
             for (let y = 0; y < canvasDIM; y++) {
-                //frames[index] = new Frame();
+                frames[index] = new Frame(tiles);
                 index++;
             }
         }

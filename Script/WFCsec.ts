@@ -8,7 +8,7 @@ namespace WFC2 {
     class Tile {
         rotation: number;
         image?: string;
-        index:number;
+        index: number;
 
         up?: Set<Tile>;
         right?: Set<Tile>;
@@ -16,9 +16,9 @@ namespace WFC2 {
         left?: Set<Tile>;
 
         constructor(
-            index:number,
+            index: number,
             rotation: number,
-            image?: string, 
+            image?: string,
             up?: Set<Tile>,
             right?: Set<Tile>,
             down?: Set<Tile>,
@@ -35,28 +35,53 @@ namespace WFC2 {
     }
 
     const canvasDIM: number = 600;
-    const frameLength: number = 2;
+    const frameCount: number = 2;
 
     //Canvas and Frames setup
     const canvas: HTMLElement = document.createElement("div");
-    const frameElements: HTMLElement[] = new Array(frameLength * frameLength);
+    const frameElements: HTMLElement[] = new Array(frameCount * frameCount);
 
-    const frames: Frame[] = new Array(frameLength * frameLength);
+    const frames: Frame[] = new Array(frameCount * frameCount);
     const tiles: Tile[] = [
         //StrightTile
-        new Tile(0,0, ".//images/stright.png")
+        new Tile(0, 0, "../images/stright.png"),
+        new Tile(0, 0, "../images/blank.png"),
     ];
 
+    let waveColapsed: boolean = false;
+
     //setting compatible options for Tiles
+
+    //StrightTile
     tiles[0].up = new Set<Tile>([tiles[0]]);
+    tiles[0].right = new Set<Tile>([tiles[0], tiles[1]]);
+    tiles[0].down = new Set<Tile>([tiles[0]]);
+    tiles[0].left = new Set<Tile>([tiles[0], tiles[1]]);
+
+    //BlankTile
+
+    tiles[1].up = new Set<Tile>([tiles[1]]);
+    tiles[1].right = new Set<Tile>([tiles[1]]);
+    tiles[1].down = new Set<Tile>([tiles[1]]);
+    tiles[1].left = new Set<Tile>([tiles[1]]);
 
 
     setup();
-    draw();
+    //test stuff
+    console.log("all Frames:");
     console.log(frames);
+
+    frames[0].options = [tiles[0]];
+    frames[1].options = [tiles[1]];
+
+    checkFrameSides(0);
+
+    do {
+        wafeFunction();
+        draw();
+
+    } while (waveColapsed);
     
-
-
     function setup(): void {
         createCanvas();
         createFrames();
@@ -65,6 +90,11 @@ namespace WFC2 {
 
     function draw(): void {
         //drawFrame(TILE);
+        for (let i: number = 0; i < frames.length; i++) {
+            if (isColapse(frames[i])) {
+                drawImage(i, frames[i].options[0].image!);
+            }
+        }
     }
 
     function createCanvas(): void {
@@ -78,8 +108,8 @@ namespace WFC2 {
     }
     function createFrames(): void {
         let index: number = 0;
-        for (let x: number = 0; x < canvasDIM; x++) {
-            for (let y: number = 0; y < canvasDIM; y++) {
+        for (let x: number = 0; x < frameCount; x++) {
+            for (let y: number = 0; y < frameCount; y++) {
                 frames[index] = new Frame(tiles);
                 index++;
             }
@@ -88,7 +118,7 @@ namespace WFC2 {
     function createFrameElement(): void {
         for (let i: number = 0; i < frames.length; i++) {
             const element: HTMLElement = document.createElement("div");
-            const frameSize: number = canvasDIM / frameLength;
+            const frameSize: number = canvasDIM / frameCount;
 
             element.setAttribute("id", "frame");
             element.dataset.index = i.toString();
@@ -105,6 +135,55 @@ namespace WFC2 {
 
             frameElements[i] = element;
             canvas.appendChild(element);
+        }
+    }
+    function wafeFunction(): void {
+        let colapsedFrames: Set<Frame> = new Set<Frame>();
+        //start to get tile wiht last entorpy / options
+        frames.forEach(frame => {
+            if (isColapse(frame)) {
+                colapsedFrames.add(frame);
+            }
+        });
+
+        //check if there is a colapsed frame
+        if (colapsedFrames.size == 0) {
+            //possible that all frames are colapsed
+        }else{
+
+        }
+        console.log(colapsedFrames);
+
+    }
+    function drawImage(index: number, image: string): void {
+        frameElements[index].style.backgroundImage = "url(" + image + ")";
+    }
+
+    function isColapse(frame: Frame): boolean {
+        return (frame.options.length == 1);
+    }
+
+    //TODO: check if optoins of Frames is compatible with tiles.
+    function checkFrameSides(index:number): void {
+        if (index % frameCount !== 0) {
+            //left side
+            console.log("left side");
+            console.log(frames[index-1].options);
+        }
+        if(((index+1)% frameCount) !== 0){
+            //right side
+            console.log("right side");
+            console.log(frames[index+1].options);
+        }
+        if(index >= frameCount){
+            //top side
+            console.log("top side");
+            console.log(frames[index-frameCount].options);
+        }
+        if(index < frameCount * (frameCount-1)){
+            //bottom side
+            console.log("bottom side");
+            console.log(frames[index+frameCount].options);
         }
     }
 }

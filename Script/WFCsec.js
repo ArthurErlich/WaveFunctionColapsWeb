@@ -45,8 +45,8 @@ var WFC2;
     console.log("all Frames:");
     console.log(frames);
     frames[0].options = [tiles[0]];
-    frames[1].options = [tiles[1]];
-    checkFrameSides(0);
+    //frames[1].options = [tiles[1]];
+    //checkFrameSides(0);
     do {
         wafeFunction();
         draw();
@@ -102,19 +102,25 @@ var WFC2;
     }
     function wafeFunction() {
         let colapsedFrames = new Set();
-        //start to get tile wiht last entorpy / options
-        frames.forEach(frame => {
-            if (isColapse(frame)) {
-                colapsedFrames.add(frame);
+        let toColapseFrames = new Set();
+        let optionsLengt = 0;
+        for (let i = 0; i < frames.length; i++) {
+            optionsLengt += frames[i].options.length;
+            if (!isColapse(frames[i])) {
+                colapsedFrames.add(frames[i]);
             }
-        });
-        //check if there is a colapsed frame
-        if (colapsedFrames.size == 0) {
-            //possible that all frames are colapsed
         }
-        else {
+        //check if all frames are colapsed
+        if (optionsLengt == 0) {
+            waveColapsed = true;
         }
-        console.log(colapsedFrames);
+        //start to get tile wiht last entorpy / options
+        for (let frame of frames) {
+            if (!isColapse(frame)) {
+                toColapseFrames.add(frame);
+            }
+        }
+        console.log(toColapseFrames);
     }
     function drawImage(index, image) {
         frameElements[index].style.backgroundImage = "url(" + image + ")";
@@ -144,5 +150,12 @@ var WFC2;
             console.log("bottom side");
             console.log(frames[index + frameCount].options);
         }
+    }
+    function setOptions(index, options) {
+        frames[index].options = options;
+    }
+    function compareOptions(option1, option2) {
+        let result = new Set;
+        return result;
     }
 })(WFC2 || (WFC2 = {}));

@@ -27,11 +27,6 @@ var wfc;
         }
     }
     class TileElement {
-        constructor(rotation, possibleTiles) {
-            this.colapsed = false;
-            this.rotation = rotation;
-            this.possibleTiles = possibleTiles;
-        }
         isColapsed() {
             return this.colapsed;
         }
@@ -40,6 +35,11 @@ var wfc;
         }
         getPossibleTiles(index) {
             return this.possibleTiles[index];
+        }
+        constructor(rotation, possibleTiles) {
+            this.colapsed = false;
+            this.rotation = rotation;
+            this.possibleTiles = possibleTiles;
         }
     }
     const tileList = [

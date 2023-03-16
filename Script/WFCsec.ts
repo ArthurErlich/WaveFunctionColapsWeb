@@ -1,6 +1,7 @@
 namespace WFC2 {
 
     const logging: boolean = true;
+    const loggingExtream: boolean = false;
 
     class Frame {
         options: Tile[];
@@ -74,22 +75,22 @@ namespace WFC2 {
     //setting compatible options for Tiles Searching for better listing!
 
     //BlankTile
-    tiles[0].up = new Set<Tile>([tiles[0],tiles[1]]);
-    tiles[0].right = new Set<Tile>([tiles[0],tiles[2]]);
-    tiles[0].down = new Set<Tile>([tiles[0],tiles[1]]);
-    tiles[0].left = new Set<Tile>([tiles[0],tiles[2]]);
+    tiles[0].up = new Set<Tile>([tiles[0], tiles[2]]);
+    tiles[0].right = new Set<Tile>([tiles[0], tiles[1]]);
+    tiles[0].down = new Set<Tile>([tiles[0], tiles[2]]);
+    tiles[0].left = new Set<Tile>([tiles[0], tiles[1]]);
 
     //StrightTile
     tiles[1].up = new Set<Tile>([tiles[1]]);
-    tiles[1].right = new Set<Tile>([tiles[1],tiles[0]]);
+    tiles[1].right = new Set<Tile>([tiles[1], tiles[0]]);
     tiles[1].down = new Set<Tile>([tiles[1]]);
-    tiles[1].left = new Set<Tile>([tiles[1],tiles[0]]);
+    tiles[1].left = new Set<Tile>([tiles[1], tiles[0]]);
 
     //StrightTile 90°
-    tiles[2].up = new Set<Tile>([tiles[2],tiles[0]]);
+    tiles[2].up = new Set<Tile>([tiles[2], tiles[0]]);
     tiles[2].right = new Set<Tile>([tiles[2]]);
     tiles[2].down = new Set<Tile>([tiles[2]]);
-    tiles[2].left = new Set<Tile>([tiles[2],tiles[0]]);
+    tiles[2].left = new Set<Tile>([tiles[2], tiles[0]]);
 
 
 
@@ -97,9 +98,13 @@ namespace WFC2 {
 
     document.body.addEventListener("click", () => {
         console.log("--WAVE Clicked--");
+        // checkFrameSides(1);
+        // checkFrameSides(6);
+
         colapsTiles();
-       // wafeFunction();
+        wafeFunction();
         draw();
+
         console.log(frames);
         console.log("--WAVE END--");
 
@@ -137,7 +142,6 @@ namespace WFC2 {
 
         frames[0].options = [tiles[0]];
         //colapsTiles();
-        checkFrameSides(2);
         draw();
     }
 
@@ -212,18 +216,18 @@ namespace WFC2 {
         let minOpt = tiles.length;
         for (let i: number = 0; i < frames.length; i++) {
             if (!isColapse(frames[i])) {
-                if(minOpt>frames[i].options.length){
+                if (minOpt > frames[i].options.length) {
                     minOpt = frames[i].options.length
                 }
             }
         }
         for (let i: number = 0; i < frames.length; i++) {
-            if(!isColapse(frames[i]) && frames[i].options.length == minOpt){    
-            toColapseFrames.add(new ColapseFrames(frames[i], i));
-            
-            console.warn("Tilese to kolapse");
-            console.log(frames[i]);
-            
+            if (!isColapse(frames[i]) && frames[i].options.length == minOpt) {
+                toColapseFrames.add(new ColapseFrames(frames[i], i));
+
+                console.warn("Tilese to kolapse");
+                console.log(frames[i]);
+
             }
         }
 
@@ -233,14 +237,20 @@ namespace WFC2 {
 
         if (toColapseFrames.size > 1) {
             const randomMumber: number = Math.floor(Math.random() * toColapseFrames.size)
+            let opitons: Tile[] = Array.from(toColapseFrames)[randomMumber].frame.options;
+
             if (logging) {
                 console.log("This tile is selected:");
                 console.log(Array.from(toColapseFrames)[randomMumber]);
             }
-            frames[Array.from(toColapseFrames)[randomMumber].index].options = [tiles[Math.floor(Math.random() * tiles.length)]];
+
+            frames[Array.from(toColapseFrames)[randomMumber].index].options = [opitons[0]];
+            //checkFrameSides(Array.from(toColapseFrames)[randomMumber].index);
 
         } else if (toColapseFrames.size == 1) {
-            frames[Array.from(toColapseFrames)[0].index].options = [tiles[Math.floor(Math.random() * tiles.length)]];
+            let opitons: Tile[] = Array.from(toColapseFrames)[0].frame.options;
+
+            frames[Array.from(toColapseFrames)[0].index].options = [opitons[0]];
             if (logging) {
                 console.log("This tile is selected:");
                 console.log(Array.from(toColapseFrames)[0]);
@@ -322,6 +332,7 @@ namespace WFC2 {
         frames[index].options = options;
     }
 
+    //--------------------compare and set options--------------------------------
     function compareAndSetOptions(a: Frame, b: Frame, direction: string): void {
         let aOpt: Set<Tile> = new Set<Tile>();
         let bOpt: Set<Tile> = new Set<Tile>();
@@ -336,47 +347,38 @@ namespace WFC2 {
                 result = new Set<Tile>;
                 for (let indexA: number = 0; indexA < a.options.length; indexA++) {
                     for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        if ((JSON.stringify(a.options[indexA])) === (JSON.stringify(b.options[indexB]))) {
-                            aOpt.add(b.options[indexB]);
+
+                        let optionsA: Tile[] = Array.from(a.options[indexA].down!);
+                        let optionsB: Tile[] = Array.from(b.options[indexB].up!);
+
+                        for (let optA: number = 0; optA < optionsA.length; optA++) {
+                            for (let optB: number = 0; optB < optionsB.length; optB++) {
+
+                                if (loggingExtream) {
+                                    console.log("-----------------");
+                                    console.log(direction + " checking " + optA + optB);
+                                    console.log((optionsA[optA]));
+                                    console.log((optionsB[optB]));
+                                    console.log("-----------------");
+                                }
+
+
+                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
+                                    aOpt.add(tiles[optionsB[optB].index]);
+                                }
+                            }
                         }
+
                     }
                 }
-                console.log(aOpt);
-                a.options = Array.from(aOpt);
-
-                /*
-                    aOpt  = new Set<Tile>();
-                    bOpt  = new Set<Tile>();
-    
-                    a.options.forEach(opt => {
-                        if (opt.down !== undefined) {
-                            aOpt = new Set<Tile>([...aOpt, ...opt.down!]);
-                        }
-                    });
-                    b.options.forEach(opt => {
-                        if (opt.up !== undefined) {
-                            bOpt = new Set<Tile>([...bOpt, ...opt.up!]);
-                        }
-                    });
-    
-    
-                    for (let itmeA of aOpt) {          
-                        for (let itemB of bOpt) {
-                            if (JSON.stringify(itmeA) === JSON.stringify(itemB)) {
-                                console.warn(itmeA);
-                                console.warn(itemB);
-                                result.add(itemB);
-                            }
-                            console.log("new loop");
-                        }
-                    }
-                    if (logging) {
-                        console.log("This are the options for the new frame");
-                        console.log(result);
-                    }
-                    a.options = Array.from(result);
-                    */
-
+                if (logging) {
+                    console.log("-----------------");
+                    console.warn("found match");
+                    console.log("result: " + direction);
+                    console.log(aOpt);
+                    console.log("-----------------")
+                }
+                a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
                 break;
             case "right":
 
@@ -385,156 +387,120 @@ namespace WFC2 {
                 result = new Set<Tile>;
                 for (let indexA: number = 0; indexA < a.options.length; indexA++) {
                     for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        if ((JSON.stringify(a.options[indexA])) === (JSON.stringify(b.options[indexB]))) {
-                            aOpt.add(b.options[indexB]);
-                        }
-                    }
-                }
-                
-                console.error(aOpt);
-                
-                a.options = Array.from(aOpt);
+
+                        let optionsA: Tile[] = Array.from(a.options[indexA].left!);
+                        let optionsB: Tile[] = Array.from(b.options[indexB].right!);
+
+                        for (let optA: number = 0; optA < optionsA.length; optA++) {
+                            for (let optB: number = 0; optB < optionsB.length; optB++) {
+
+                                if (loggingExtream) {
+                                    console.log("-----------------");
+                                    console.log(direction + " checking " + optA + optB);
+                                    console.log((optionsA[optA]));
+                                    console.log((optionsB[optB]));
+                                    console.log("-----------------");
+                                }
 
 
-                // dUMM -> ich muss jede Option von A einzelnd Betrachten!!
-                /*
-                a.options.forEach(opt => {
-                    if (opt.right !== undefined) {
-                        aOpt = new Set<Tile>([...aOpt, ...opt.right!]);
-                    }
-                });
-                b.options.forEach(opt => {
-                    if (opt.left !== undefined) {
-                        bOpt = new Set<Tile>([...bOpt, ...opt.left!]);
-                    }
-                });
-                
-                console.error(aOpt);
-                
-
-                for (let itmeA of aOpt) {
-                    for (let itemB of bOpt) {
-                        if (JSON.stringify(itmeA) === JSON.stringify(itemB)) {
-                            console.warn(itmeA);
-                            console.warn(itemB);
-                            result.add(itemB);
-                        }
-                        console.log("new loop");
-                    }
-                }
-                if (logging) {
-                    console.log("This are the options for the new frame");
-                    console.log(result);
-                }
-                a.options = Array.from(aOpt);
-                */
-
-                break;
-
-                //TODO: Make Everthing like down this
-            case "left":
-                aOpt = new Set<Tile>;
-                bOpt = new Set<Tile>;
-                result = new Set<Tile>;
-                for (let indexA: number = 0; indexA < a.options.length; indexA++) {
-                    for (let indexB = 0; indexB < b.options.length; indexB++) {
-
-                        let optionsA:Tile[] = Array.from(a.options[indexA].right!);
-                        let optionsB:Tile[] = Array.from(b.options[indexB].left!);
-                        console.warn(b.options[indexB].left!);
-                        
-                        
-                        for (let optA:number = 0; optA < optionsA.length; optA++){
-                            for (let optB:number = 0; optB < optionsB.length; optB++){
-
-                                if ((JSON.stringify(optionsA[optA])) === (JSON.stringify(optionsB[optB]))) {
-                                    aOpt.add(b.options[indexB]);
+                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
+                                    aOpt.add(tiles[optionsB[optB].index]);
                                 }
                             }
                         }
-                        
-                    }
-                }
-                
-                a.options = Array.from(aOpt);
 
-
-            /*
-                aOpt = new Set<Tile>();
-                bOpt = new Set<Tile>();
- 
-                a.options.forEach(opt => {
-                    if (opt.left !== undefined) {
-                        aOpt = new Set<Tile>([...aOpt, ...opt.left!]);
-                    }
-                });
-                b.options.forEach(opt => {
-                    if (opt.right !== undefined) {
-                        bOpt = new Set<Tile>([...bOpt, ...opt.right!]);
-                    }
-                });
- 
-                for (let itmeA of aOpt) {
-                    for (let itemB of bOpt) {
-                        if (JSON.stringify(itmeA) === JSON.stringify(itemB)) {
-                            result.add(itemB);
-                        }
                     }
                 }
                 if (logging) {
-                    console.log("This are the options for the new frame");
-                    console.log(result);
+                    console.log("-----------------");
+                    console.warn("found match");
+                    console.log("result: " + direction);
+                    console.log(aOpt);
+                    console.log("-----------------")
                 }
-                a.options = Array.from(result);
- 
+                a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
                 break;
-*/
-            case "bottom":
+
+            //TODO: Make Everthing like down this
+            case "left":
+
                 aOpt = new Set<Tile>;
                 bOpt = new Set<Tile>;
                 result = new Set<Tile>;
                 for (let indexA: number = 0; indexA < a.options.length; indexA++) {
                     for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        if ((JSON.stringify(a.options[indexA])) === (JSON.stringify(b.options[indexB]))) {
-                            aOpt.add(b.options[indexB]);
+
+                        let optionsA: Tile[] = Array.from(a.options[indexA].right!);
+                        let optionsB: Tile[] = Array.from(b.options[indexB].left!);
+
+                        for (let optA: number = 0; optA < optionsA.length; optA++) {
+                            for (let optB: number = 0; optB < optionsB.length; optB++) {
+
+                                if (loggingExtream) {
+                                    console.log("-----------------");
+                                    console.log(direction + " checking " + optA + optB);
+                                    console.log((optionsA[optA]));
+                                    console.log((optionsB[optB]));
+                                    console.log("-----------------");
+                                }
+
+                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
+                                    aOpt.add(tiles[optionsB[optB].index]);
+                                }
+                            }
                         }
+
                     }
                 }
-                
-                a.options = Array.from(aOpt);
-
-                /*
-                                aOpt = new Set<Tile>();
-                                bOpt = new Set<Tile>();
-                
-                                a.options.forEach(opt => {
-                                    if (opt.up !== undefined) {
-                                        aOpt = new Set<Tile>([...aOpt, ...opt.up!]);
-                                    }
-                                });
-                                b.options.forEach(opt => {
-                                    if (opt.down !== undefined) {
-                                        bOpt = new Set<Tile>([...bOpt, ...opt.down!]);
-                                    }
-                                });
-                
-                                for (let itmeA of aOpt) {
-                                    for (let itemB of bOpt) {
-                                        if (JSON.stringify(itmeA) === JSON.stringify(itemB)) {
-                                            console.warn(itmeA);
-                                            console.warn(itemB);
-                                            result.add(itemB);
-                                        }
-                                        console.log("new loop");
-                                    }
-                                }
-                                if (logging) {
-                                    console.log("This are the options for the new frame");
-                                    console.log(result);
-                                }
-                                a.options = Array.from(result);
-                */
+                if (logging) {
+                    console.log("-----------------");
+                    console.warn("found match");
+                    console.log("result: " + direction);
+                    console.log(aOpt);
+                    console.log("-----------------");
+                }
+                a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
                 break;
+            case "bottom":
+
+                aOpt = new Set<Tile>;
+                bOpt = new Set<Tile>;
+                result = new Set<Tile>;
+                for (let indexA: number = 0; indexA < a.options.length; indexA++) {
+                    for (let indexB = 0; indexB < b.options.length; indexB++) {
+
+                        let optionsA: Tile[] = Array.from(a.options[indexA].up!);
+                        let optionsB: Tile[] = Array.from(b.options[indexB].down!);
+
+                        for (let optA: number = 0; optA < optionsA.length; optA++) {
+                            for (let optB: number = 0; optB < optionsB.length; optB++) {
+
+                                if (loggingExtream) {
+                                    console.log("-----------------");
+                                    console.log(direction + " checking " + optA + optB);
+                                    console.log((optionsA[optA]));
+                                    console.log((optionsB[optB]));
+                                    console.log("-----------------");
+                                }
+
+                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
+                                    aOpt.add(tiles[optionsB[optB].index]);
+                                }
+                            }
+                        }
+
+                    }
+                }
+                if (logging) {
+                    console.log("-----------------");
+                    console.warn("found match");
+                    console.log("result: " + direction);
+                    console.log(aOpt);
+                    console.log("-----------------");
+                }
+                a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
+                break;
+
             default:
                 console.warn("no direction to compare found");
 
@@ -546,17 +512,17 @@ namespace WFC2 {
     }
 
     function colapsTiles(): void {
+
+
         for (let index: number = 0; index < frames.length; index++) {
             if (!isColapse(frames[index])) {
                 checkFrameSides(index);
             }
         }
-        
-        for (let index: number = frames.length-1; index >= 0; index--) {
+        for (let index: number = frames.length - 1; index > 0; index--) {
             if (!isColapse(frames[index])) {
                 checkFrameSides(index);
             }
         }
-        
     }
 }

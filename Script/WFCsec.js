@@ -1,7 +1,7 @@
 "use strict";
 var WFC2;
 (function (WFC2) {
-    const logging = true;
+    const logging = false;
     const loggingExtream = false;
     class Frame {
         constructor(options) {
@@ -29,7 +29,8 @@ var WFC2;
         }
     }
     const canvasDIM = 800;
-    const frameCount = 5;
+    const frameCount = 10;
+    ;
     //Canvas and Frames setup
     const canvas = document.createElement("div");
     const frameElements = new Array(frameCount * frameCount);
@@ -59,14 +60,15 @@ var WFC2;
     tiles[2].right = new Set([tiles[2]]);
     tiles[2].down = new Set([tiles[2]]);
     tiles[2].left = new Set([tiles[2], tiles[0]]);
+    let pause = true;
     document.body.addEventListener("click", () => {
         console.log("--WAVE Clicked--");
         // checkFrameSides(1);
         // checkFrameSides(6);
         colapsTiles();
+        draw();
         wafeFunction();
         draw();
-        console.log(frames);
         console.log("--WAVE END--");
     });
     setup();
@@ -81,17 +83,18 @@ var WFC2;
             console.log("--WAVE START--");
             //set Frame options on all Frames
             colapsTiles();
+            draw();
             wafeFunction();
             draw();
             console.log(frames);
             console.log("--WAVE END--");
-        } while (false); // !waveColapsed
+        } while (!waveColapsed && !pause); // !waveColapsed
     }
     function setup() {
         createCanvas();
         createFrames();
         createFrameElement();
-        frames[0].options = [tiles[0]];
+        frames[Math.floor((frameCount * frameCount) / 2)].options = [tiles[0]];
         //colapsTiles();
         draw();
     }
@@ -164,30 +167,38 @@ var WFC2;
         }
         for (let i = 0; i < frames.length; i++) {
             if (!isColapse(frames[i]) && frames[i].options.length == minOpt) {
-                toColapseFrames.add(new ColapseFrames(frames[i], i));
-                console.warn("Tilese to kolapse");
-                console.log(frames[i]);
+                toColapseFrames.add(i);
             }
         }
         if (logging) {
             console.log(toColapseFrames);
         }
         if (toColapseFrames.size > 1) {
-            const randomMumber = Math.floor(Math.random() * toColapseFrames.size);
-            let opitons = Array.from(toColapseFrames)[randomMumber].frame.options;
+            //randomly select one of the tiles
+            const randomFrameID = Array.from(toColapseFrames)[Math.floor(Math.random() * toColapseFrames.size)];
+            let selectedFrame = frames[randomFrameID];
+            let randomOptionID = Math.floor(Math.random() * selectedFrame.options.length);
+            let randomOption = selectedFrame.options[randomOptionID];
             if (logging) {
                 console.log("This tile is selected:");
-                console.log(Array.from(toColapseFrames)[randomMumber]);
+                console.log(selectedFrame);
+                console.log(randomFrameID);
+                console.log("This tile has this options:");
+                console.log(randomOption);
+                console.log(randomOptionID);
             }
-            frames[Array.from(toColapseFrames)[randomMumber].index].options = [opitons[0]];
-            //checkFrameSides(Array.from(toColapseFrames)[randomMumber].index);
+            //set the frame options to the selected tile
+            frames[randomFrameID].options = new Array(randomOption);
         }
         else if (toColapseFrames.size == 1) {
-            let opitons = Array.from(toColapseFrames)[0].frame.options;
-            frames[Array.from(toColapseFrames)[0].index].options = [opitons[0]];
+            let frameID = Array.from(toColapseFrames)[0];
+            let selectedFrame = frames[frameID];
+            let randomOption = selectedFrame.options[Math.floor(Math.random() * selectedFrame.options.length)];
             if (logging) {
                 console.log("This tile is selected:");
-                console.log(Array.from(toColapseFrames)[0]);
+                console.log(selectedFrame);
+                console.log("This tile has this options:");
+                console.log(randomOption);
             }
         }
         else if (toColapseFrames.size == 0) {
@@ -253,140 +264,78 @@ var WFC2;
     }
     //--------------------compare and set options--------------------------------
     function compareAndSetOptions(a, b, direction) {
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         let aOpt = new Set();
-        let bOpt = new Set();
-        let result = new Set();
         switch (direction) {
             case "top":
-                aOpt = new Set;
-                bOpt = new Set;
-                result = new Set;
+                if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
+                    //console.log("bottom side is equal ro top side");
+                    return;
+                }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        let optionsA = Array.from(a.options[indexA].down);
-                        let optionsB = Array.from(b.options[indexB].up);
-                        for (let optA = 0; optA < optionsA.length; optA++) {
-                            for (let optB = 0; optB < optionsB.length; optB++) {
-                                if (loggingExtream) {
-                                    console.log("-----------------");
-                                    console.log(direction + " checking " + optA + optB);
-                                    console.log((optionsA[optA]));
-                                    console.log((optionsB[optB]));
-                                    console.log("-----------------");
-                                }
-                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
-                                    aOpt.add(tiles[optionsB[optB].index]);
+                    for (let optA = 0; optA < ((_a = a.options[indexA].up) === null || _a === void 0 ? void 0 : _a.size); optA++) {
+                        for (let indexB = 0; indexB < b.options.length; indexB++) {
+                            for (let optB = 0; optB < ((_b = b.options[indexB].down) === null || _b === void 0 ? void 0 : _b.size); optB++) {
+                                if (JSON.stringify(Array.from(a.options[indexA].up)[optA]) === JSON.stringify(Array.from(b.options[indexB].up)[optB])) {
+                                    aOpt.add(a.options[indexA]);
                                 }
                             }
                         }
                     }
-                }
-                if (logging) {
-                    console.log("-----------------");
-                    console.warn("found match");
-                    console.log("result: " + direction);
-                    console.log(aOpt);
-                    console.log("-----------------");
                 }
                 a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
                 break;
             case "right":
-                aOpt = new Set;
-                bOpt = new Set;
-                result = new Set;
+                if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
+                    // console.log("bottom side is equal ro top side");
+                    return;
+                }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        let optionsA = Array.from(a.options[indexA].left);
-                        let optionsB = Array.from(b.options[indexB].right);
-                        for (let optA = 0; optA < optionsA.length; optA++) {
-                            for (let optB = 0; optB < optionsB.length; optB++) {
-                                if (loggingExtream) {
-                                    console.log("-----------------");
-                                    console.log(direction + " checking " + optA + optB);
-                                    console.log((optionsA[optA]));
-                                    console.log((optionsB[optB]));
-                                    console.log("-----------------");
-                                }
-                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
-                                    aOpt.add(tiles[optionsB[optB].index]);
+                    for (let optA = 0; optA < ((_c = a.options[indexA].right) === null || _c === void 0 ? void 0 : _c.size); optA++) {
+                        for (let indexB = 0; indexB < b.options.length; indexB++) {
+                            for (let optB = 0; optB < ((_d = b.options[indexB].left) === null || _d === void 0 ? void 0 : _d.size); optB++) {
+                                if (JSON.stringify(Array.from(a.options[indexA].right)[optA]) === JSON.stringify(Array.from(b.options[indexB].left)[optB])) {
+                                    aOpt.add(a.options[indexA]);
                                 }
                             }
                         }
                     }
-                }
-                if (logging) {
-                    console.log("-----------------");
-                    console.warn("found match");
-                    console.log("result: " + direction);
-                    console.log(aOpt);
-                    console.log("-----------------");
-                }
-                a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
-                break;
-            //TODO: Make Everthing like down this
-            case "left":
-                aOpt = new Set;
-                bOpt = new Set;
-                result = new Set;
-                for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        let optionsA = Array.from(a.options[indexA].right);
-                        let optionsB = Array.from(b.options[indexB].left);
-                        for (let optA = 0; optA < optionsA.length; optA++) {
-                            for (let optB = 0; optB < optionsB.length; optB++) {
-                                if (loggingExtream) {
-                                    console.log("-----------------");
-                                    console.log(direction + " checking " + optA + optB);
-                                    console.log((optionsA[optA]));
-                                    console.log((optionsB[optB]));
-                                    console.log("-----------------");
-                                }
-                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
-                                    aOpt.add(tiles[optionsB[optB].index]);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (logging) {
-                    console.log("-----------------");
-                    console.warn("found match");
-                    console.log("result: " + direction);
-                    console.log(aOpt);
-                    console.log("-----------------");
                 }
                 a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
                 break;
             case "bottom":
-                aOpt = new Set;
-                bOpt = new Set;
-                result = new Set;
+                if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
+                    // console.log("bottom side is equal ro top side");
+                    return;
+                }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let indexB = 0; indexB < b.options.length; indexB++) {
-                        let optionsA = Array.from(a.options[indexA].up);
-                        let optionsB = Array.from(b.options[indexB].down);
-                        for (let optA = 0; optA < optionsA.length; optA++) {
-                            for (let optB = 0; optB < optionsB.length; optB++) {
-                                if (loggingExtream) {
-                                    console.log("-----------------");
-                                    console.log(direction + " checking " + optA + optB);
-                                    console.log((optionsA[optA]));
-                                    console.log((optionsB[optB]));
-                                    console.log("-----------------");
-                                }
-                                if ((JSON.stringify(optionsA[optB])) === (JSON.stringify(optionsB[optB]))) {
-                                    aOpt.add(tiles[optionsB[optB].index]);
+                    for (let optA = 0; optA < ((_e = a.options[indexA].down) === null || _e === void 0 ? void 0 : _e.size); optA++) {
+                        for (let indexB = 0; indexB < b.options.length; indexB++) {
+                            for (let optB = 0; optB < ((_f = b.options[indexB].up) === null || _f === void 0 ? void 0 : _f.size); optB++) {
+                                if (JSON.stringify(Array.from(a.options[indexA].down)[optA]) === JSON.stringify(Array.from(b.options[indexB].up)[optB])) {
+                                    aOpt.add(a.options[indexA]);
                                 }
                             }
                         }
                     }
                 }
-                if (logging) {
-                    console.log("-----------------");
-                    console.warn("found match");
-                    console.log("result: " + direction);
-                    console.log(aOpt);
-                    console.log("-----------------");
+                a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
+                break;
+            case "left":
+                if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
+                    // console.log("bottom side is equal ro top side");
+                    return;
+                }
+                for (let indexA = 0; indexA < a.options.length; indexA++) {
+                    for (let optA = 0; optA < ((_g = a.options[indexA].left) === null || _g === void 0 ? void 0 : _g.size); optA++) {
+                        for (let indexB = 0; indexB < b.options.length; indexB++) {
+                            for (let optB = 0; optB < ((_h = b.options[indexB].right) === null || _h === void 0 ? void 0 : _h.size); optB++) {
+                                if (JSON.stringify(Array.from(a.options[indexA].left)[optA]) === JSON.stringify(Array.from(b.options[indexB].right)[optB])) {
+                                    aOpt.add(a.options[indexA]);
+                                }
+                            }
+                        }
+                    }
                 }
                 a.options = (Array.from(aOpt)).filter((item) => item !== undefined);
                 break;

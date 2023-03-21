@@ -1,7 +1,6 @@
 namespace WFC2 {
 
     const logging: boolean = false;
-    const loggingExtream: boolean = false;
 
     class Frame {
         options: Tile[];
@@ -41,14 +40,6 @@ namespace WFC2 {
         }
 
     }
-    class ColapseFrames {
-        frame: Frame;
-        index: number;
-        constructor(frame: Frame, index: number) {
-            this.frame = frame;
-            this.index = index;
-        }
-    }
 
     const canvasDIM: number = 800;
     const frameCount: number = 10;
@@ -60,39 +51,48 @@ namespace WFC2 {
 
     const frames: Frame[] = new Array(frameCount * frameCount);
     const tiles: Tile[] = [
+
         //BlankTile
         new Tile(0, 0, "../images/blank.png"),
         //StrightTile
         new Tile(1, 0, "../images/stright.png"),
         //StrightTile 90°
         new Tile(2, 1, "../images/stright.png"),
+        //CronerTile right, down
+        new Tile(3, 0, "../images/corner.png"),
+
 
 
     ];
 
     let waveColapsed: boolean = false;
 
-    //setting compatible options for Tiles Searching for better listing!
 
+    //setting compatible options for Tiles Searching for better listing!
     //BlankTile
     tiles[0].up = new Set<Tile>([tiles[0], tiles[2]]);
     tiles[0].right = new Set<Tile>([tiles[0], tiles[1]]);
     tiles[0].down = new Set<Tile>([tiles[0], tiles[2]]);
     tiles[0].left = new Set<Tile>([tiles[0], tiles[1]]);
 
-    //StrightTile
-    tiles[1].up = new Set<Tile>([tiles[1]]);
+    //StrightTile |
+    tiles[1].up = new Set<Tile>([tiles[1], tiles[3]]);
     tiles[1].right = new Set<Tile>([tiles[1], tiles[0]]);
     tiles[1].down = new Set<Tile>([tiles[1]]);
     tiles[1].left = new Set<Tile>([tiles[1], tiles[0]]);
 
-    //StrightTile 90°
+    //StrightTile - 90°
     tiles[2].up = new Set<Tile>([tiles[2], tiles[0]]);
     tiles[2].right = new Set<Tile>([tiles[2]]);
-    tiles[2].down = new Set<Tile>([tiles[2]]);
-    tiles[2].left = new Set<Tile>([tiles[2], tiles[0]]);
+    tiles[2].down = new Set<Tile>([tiles[2], tiles[0]]);
+    tiles[2].left = new Set<Tile>([tiles[2], tiles[3]]);
 
+    //CronerTile right, down
 
+    tiles[3].up = new Set<Tile>([tiles[0], tiles[1]]);
+    tiles[3].right = new Set<Tile>([tiles[2]]);
+    tiles[3].down = new Set<Tile>([tiles[1]]);
+    tiles[3].left = new Set<Tile>([tiles[0], tiles[2]]);
 
     let pause: boolean = true;
 
@@ -100,17 +100,20 @@ namespace WFC2 {
         console.log("--WAVE Clicked--");
         // checkFrameSides(1);
         // checkFrameSides(6);
-
-        colapsTiles();
-        draw();
-        wafeFunction();
-        draw();
+        if (waveColapsed) {
+            location.reload();
+        } else {
+            start();
+        }
         console.log("--WAVE END--");
 
     });
 
 
     setup();
+    draw();
+    start();
+    draw();
 
     //test stuff
     if (logging) {
@@ -122,15 +125,12 @@ namespace WFC2 {
     function start(): void {
         do {
             console.log("--WAVE START--");
-            //set Frame options on all Frames
-            colapsTiles();
             draw();
             wafeFunction();
-            draw();
-            console.log(frames);
+            //console.log(frames);
             console.log("--WAVE END--");
 
-        } while (!waveColapsed && !pause); // !waveColapsed
+        } while (!waveColapsed); // !waveColapsed
     }
 
     function setup(): void {
@@ -138,7 +138,10 @@ namespace WFC2 {
         createFrames();
         createFrameElement();
 
-        frames[Math.floor((frameCount * frameCount) / 2)].options = [tiles[0]];
+        let randomTileID = Math.floor(Math.random() * tiles.length);
+        let randomOptionID = Math.floor(Math.random() * frames[randomTileID].options.length);
+        frames[randomTileID].options = [frames[randomTileID].options[randomOptionID]];
+
         //colapsTiles();
         draw();
     }
@@ -147,7 +150,13 @@ namespace WFC2 {
         //drawFrame(TILE);
         for (let i: number = 0; i < frames.length; i++) {
             if (isColapse(frames[i])) {
-                drawImage(i, frames[i].options[0].image!, frames[i].options[0].rotation!);
+                try {
+                    drawImage(i, frames[i].options[0].image!, frames[i].options[0].rotation!);
+                } catch (error) {
+                    console.error(error);
+                    stop();
+                    location.reload();
+                }
             }
             drawFrameOptions(i, frames[i].options.length);
         }
@@ -198,7 +207,6 @@ namespace WFC2 {
         let toColapseFrames: Set<number> = new Set<number>();
 
 
-
         for (let i: number = 0; i < frames.length; i++) {
             if (isColapse(frames[i])) {
                 colapsedFrames++;
@@ -208,10 +216,21 @@ namespace WFC2 {
         if (colapsedFrames == frameCount * frameCount) {
             waveColapsed = true;
             console.warn("All Frames are colapsed");
-
+            //location.reload();
         }
+        // check if one Frame has zero option
+        frames.forEach(frame => {
+            if (frame.options.length === 0) {
+                waveColapsed = true;
+                console.error("Frame has no options");
+                draw();
+                //location.reload();
+
+            }
+        });
+
         //start to get tile wiht last entorpy / options
-        let minOpt = tiles.length;
+        let minOpt = tiles.length + 1;
         for (let i: number = 0; i < frames.length; i++) {
             if (!isColapse(frames[i])) {
                 if (minOpt > frames[i].options.length) {
@@ -232,6 +251,10 @@ namespace WFC2 {
         if (toColapseFrames.size > 1) {
             //randomly select one of the tiles
             const randomFrameID: number = Array.from(toColapseFrames)[Math.floor(Math.random() * toColapseFrames.size)];
+            checkFrameSidesCW(randomFrameID);
+            checkFrameSidesCCW(randomFrameID);
+
+            colapsTiles();
             let selectedFrame: Frame = frames[randomFrameID];
             let randomOptionID: number = Math.floor(Math.random() * selectedFrame.options.length);
             let randomOption: Tile = selectedFrame.options[randomOptionID];
@@ -247,13 +270,15 @@ namespace WFC2 {
             }
             //set the frame options to the selected tile
             frames[randomFrameID].options = new Array(randomOption);
-
-
+            
         } else if (toColapseFrames.size == 1) {
-            let frameID: number = Array.from(toColapseFrames)[0];
+            const frameID: number = Array.from(toColapseFrames)[0];
+            checkFrameSidesCW(frameID);
+            checkFrameSidesCW(frameID);
+
+            colapsTiles();
             let selectedFrame: Frame = frames[frameID];
             let randomOption: Tile = selectedFrame.options[Math.floor(Math.random() * selectedFrame.options.length)];
-
 
             if (logging) {
                 console.log("This tile is selected:");
@@ -261,6 +286,8 @@ namespace WFC2 {
                 console.log("This tile has this options:");
                 console.log(randomOption);
             }
+            frames[frameID].options = new Array(randomOption);
+
         } else if (toColapseFrames.size == 0) {
             console.warn("All possilbe Frames are colapsed");
             waveColapsed = true;
@@ -284,10 +311,12 @@ namespace WFC2 {
     }
 
     //TODO: check if optoins of Frames is compatible with tiles.
-    function checkFrameSides(index: number): void {
+    function checkTopFrame(index: number): void {
+        if (logging) {
 
-        console.log("compare frames around: " + index);
-        console.log(frames[index]);
+            console.log("compare frames around: " + index);
+            console.log(frames[index]);
+        }
 
         if (index >= frameCount) {
             //top side
@@ -299,28 +328,11 @@ namespace WFC2 {
 
             (frames[index], frames[index - frameCount], "top");
             compareAndSetOptions(frames[index], frames[index - frameCount], "top");
+            checkTopFrame(index - frameCount);
         }
+    }
 
-        if (((index + 1) % frameCount) !== 0) {
-            //right side
-            if (logging) {
-                console.log("----");
-                console.log("right side");
-                console.log(frames[index + 1].options);
-            }
-            compareAndSetOptions(frames[index], frames[index + 1], "right");
-        }
-        if (index < frameCount * (frameCount - 1)) {
-            //bottom side
-            if (logging) {
-                console.log("----");
-                console.log("bottom side");
-                console.log(frames[index + frameCount].options);
-            }
-
-            compareAndSetOptions(frames[index], frames[index + frameCount], "bottom");
-        }
-
+    function checkLeftFrame(index: number): void {
         if (index % frameCount !== 0) {
             //left side
 
@@ -329,9 +341,47 @@ namespace WFC2 {
                 console.log("left side");
                 console.log(frames[index - 1].options);
             }
-
             compareAndSetOptions(frames[index], frames[index - 1], "left");
+            checkLeftFrame(index - 1);
         }
+    }
+    function checkRightFrame(index: number): void {
+        if (((index + 1) % frameCount) !== 0) {
+            //right side
+            if (logging) {
+                console.log("----");
+                console.log("right side");
+                console.log(frames[index + 1].options);
+            }
+            compareAndSetOptions(frames[index], frames[index + 1], "right");
+            checkRightFrame(index + 1);
+        }
+    }
+    function checkBottomFrame(index: number): void {
+        if (index < frameCount * (frameCount - 1)) {
+            //bottom side
+            if (logging) {
+                console.log("----");
+                console.log("bottom side");
+                console.log(frames[index + frameCount].options);
+            }
+            compareAndSetOptions(frames[index], frames[index + frameCount], "bottom");
+            checkBottomFrame(index + frameCount);
+        }
+    }
+
+
+    function checkFrameSidesCW(index: number): void {
+        checkTopFrame(index);
+        checkRightFrame(index);
+        checkBottomFrame(index);
+        checkLeftFrame(index);
+    }
+    function checkFrameSidesCCW(index: number): void {
+        checkTopFrame(index);
+        checkLeftFrame(index);
+        checkBottomFrame(index);
+        checkRightFrame(index);
     }
 
     function setOptions(index: number, options: Tile[]): void {
@@ -345,7 +395,6 @@ namespace WFC2 {
             case "top":
                 if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
                     //console.log("bottom side is equal ro top side");
-
                     return;
                 }
 
@@ -450,13 +499,15 @@ namespace WFC2 {
 
         for (let index: number = 0; index < frames.length; index++) {
             if (!isColapse(frames[index])) {
-                checkFrameSides(index);
+                checkFrameSidesCW(index);
+
             }
         }
 
         for (let index: number = frames.length - 1; index > 0; index--) {
             if (!isColapse(frames[index])) {
-                checkFrameSides(index);
+                checkFrameSidesCCW(index);
+
             }
         }
     }

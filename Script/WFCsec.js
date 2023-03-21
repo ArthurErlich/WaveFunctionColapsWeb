@@ -2,7 +2,6 @@
 var WFC2;
 (function (WFC2) {
     const logging = false;
-    const loggingExtream = false;
     class Frame {
         constructor(options) {
             this.options = options;
@@ -22,12 +21,6 @@ var WFC2;
             return (this.index.toString() + this.rotation + this.image);
         }
     }
-    class ColapseFrames {
-        constructor(frame, index) {
-            this.frame = frame;
-            this.index = index;
-        }
-    }
     const canvasDIM = 800;
     const frameCount = 10;
     ;
@@ -42,6 +35,8 @@ var WFC2;
         new Tile(1, 0, "../images/stright.png"),
         //StrightTile 90°
         new Tile(2, 1, "../images/stright.png"),
+        //CronerTile right, down
+        new Tile(3, 0, "../images/corner.png"),
     ];
     let waveColapsed = false;
     //setting compatible options for Tiles Searching for better listing!
@@ -50,28 +45,38 @@ var WFC2;
     tiles[0].right = new Set([tiles[0], tiles[1]]);
     tiles[0].down = new Set([tiles[0], tiles[2]]);
     tiles[0].left = new Set([tiles[0], tiles[1]]);
-    //StrightTile
-    tiles[1].up = new Set([tiles[1]]);
+    //StrightTile |
+    tiles[1].up = new Set([tiles[1], tiles[3]]);
     tiles[1].right = new Set([tiles[1], tiles[0]]);
     tiles[1].down = new Set([tiles[1]]);
     tiles[1].left = new Set([tiles[1], tiles[0]]);
-    //StrightTile 90°
+    //StrightTile - 90°
     tiles[2].up = new Set([tiles[2], tiles[0]]);
     tiles[2].right = new Set([tiles[2]]);
-    tiles[2].down = new Set([tiles[2]]);
-    tiles[2].left = new Set([tiles[2], tiles[0]]);
+    tiles[2].down = new Set([tiles[2], tiles[0]]);
+    tiles[2].left = new Set([tiles[2], tiles[3]]);
+    //CronerTile right, down
+    tiles[3].up = new Set([tiles[0], tiles[1]]);
+    tiles[3].right = new Set([tiles[2]]);
+    tiles[3].down = new Set([tiles[1]]);
+    tiles[3].left = new Set([tiles[0], tiles[2]]);
     let pause = true;
     document.body.addEventListener("click", () => {
         console.log("--WAVE Clicked--");
         // checkFrameSides(1);
         // checkFrameSides(6);
-        colapsTiles();
-        draw();
-        wafeFunction();
-        draw();
+        if (waveColapsed) {
+            location.reload();
+        }
+        else {
+            start();
+        }
         console.log("--WAVE END--");
     });
     setup();
+    draw();
+    start();
+    draw();
     //test stuff
     if (logging) {
         console.log("all Frames:");
@@ -81,20 +86,19 @@ var WFC2;
     function start() {
         do {
             console.log("--WAVE START--");
-            //set Frame options on all Frames
-            colapsTiles();
             draw();
             wafeFunction();
-            draw();
-            console.log(frames);
+            //console.log(frames);
             console.log("--WAVE END--");
-        } while (!waveColapsed && !pause); // !waveColapsed
+        } while (!waveColapsed); // !waveColapsed
     }
     function setup() {
         createCanvas();
         createFrames();
         createFrameElement();
-        frames[Math.floor((frameCount * frameCount) / 2)].options = [tiles[0]];
+        let randomTileID = Math.floor(Math.random() * tiles.length);
+        let randomOptionID = Math.floor(Math.random() * frames[randomTileID].options.length);
+        frames[randomTileID].options = [frames[randomTileID].options[randomOptionID]];
         //colapsTiles();
         draw();
     }
@@ -102,7 +106,14 @@ var WFC2;
         //drawFrame(TILE);
         for (let i = 0; i < frames.length; i++) {
             if (isColapse(frames[i])) {
-                drawImage(i, frames[i].options[0].image, frames[i].options[0].rotation);
+                try {
+                    drawImage(i, frames[i].options[0].image, frames[i].options[0].rotation);
+                }
+                catch (error) {
+                    console.error(error);
+                    stop();
+                    location.reload();
+                }
             }
             drawFrameOptions(i, frames[i].options.length);
         }
@@ -155,9 +166,19 @@ var WFC2;
         if (colapsedFrames == frameCount * frameCount) {
             waveColapsed = true;
             console.warn("All Frames are colapsed");
+            //location.reload();
         }
+        // check if one Frame has zero option
+        frames.forEach(frame => {
+            if (frame.options.length === 0) {
+                waveColapsed = true;
+                console.error("Frame has no options");
+                draw();
+                //location.reload();
+            }
+        });
         //start to get tile wiht last entorpy / options
-        let minOpt = tiles.length;
+        let minOpt = tiles.length + 1;
         for (let i = 0; i < frames.length; i++) {
             if (!isColapse(frames[i])) {
                 if (minOpt > frames[i].options.length) {
@@ -176,6 +197,9 @@ var WFC2;
         if (toColapseFrames.size > 1) {
             //randomly select one of the tiles
             const randomFrameID = Array.from(toColapseFrames)[Math.floor(Math.random() * toColapseFrames.size)];
+            checkFrameSidesCW(randomFrameID);
+            checkFrameSidesCCW(randomFrameID);
+            colapsTiles();
             let selectedFrame = frames[randomFrameID];
             let randomOptionID = Math.floor(Math.random() * selectedFrame.options.length);
             let randomOption = selectedFrame.options[randomOptionID];
@@ -191,7 +215,10 @@ var WFC2;
             frames[randomFrameID].options = new Array(randomOption);
         }
         else if (toColapseFrames.size == 1) {
-            let frameID = Array.from(toColapseFrames)[0];
+            const frameID = Array.from(toColapseFrames)[0];
+            checkFrameSidesCW(frameID);
+            checkFrameSidesCW(frameID);
+            colapsTiles();
             let selectedFrame = frames[frameID];
             let randomOption = selectedFrame.options[Math.floor(Math.random() * selectedFrame.options.length)];
             if (logging) {
@@ -200,6 +227,7 @@ var WFC2;
                 console.log("This tile has this options:");
                 console.log(randomOption);
             }
+            frames[frameID].options = new Array(randomOption);
         }
         else if (toColapseFrames.size == 0) {
             console.warn("All possilbe Frames are colapsed");
@@ -218,9 +246,11 @@ var WFC2;
         return (frame.options.length == 1);
     }
     //TODO: check if optoins of Frames is compatible with tiles.
-    function checkFrameSides(index) {
-        console.log("compare frames around: " + index);
-        console.log(frames[index]);
+    function checkTopFrame(index) {
+        if (logging) {
+            console.log("compare frames around: " + index);
+            console.log(frames[index]);
+        }
         if (index >= frameCount) {
             //top side
             if (logging) {
@@ -230,25 +260,10 @@ var WFC2;
             }
             (frames[index], frames[index - frameCount], "top");
             compareAndSetOptions(frames[index], frames[index - frameCount], "top");
+            checkTopFrame(index - frameCount);
         }
-        if (((index + 1) % frameCount) !== 0) {
-            //right side
-            if (logging) {
-                console.log("----");
-                console.log("right side");
-                console.log(frames[index + 1].options);
-            }
-            compareAndSetOptions(frames[index], frames[index + 1], "right");
-        }
-        if (index < frameCount * (frameCount - 1)) {
-            //bottom side
-            if (logging) {
-                console.log("----");
-                console.log("bottom side");
-                console.log(frames[index + frameCount].options);
-            }
-            compareAndSetOptions(frames[index], frames[index + frameCount], "bottom");
-        }
+    }
+    function checkLeftFrame(index) {
         if (index % frameCount !== 0) {
             //left side
             if (logging) {
@@ -257,7 +272,44 @@ var WFC2;
                 console.log(frames[index - 1].options);
             }
             compareAndSetOptions(frames[index], frames[index - 1], "left");
+            checkLeftFrame(index - 1);
         }
+    }
+    function checkRightFrame(index) {
+        if (((index + 1) % frameCount) !== 0) {
+            //right side
+            if (logging) {
+                console.log("----");
+                console.log("right side");
+                console.log(frames[index + 1].options);
+            }
+            compareAndSetOptions(frames[index], frames[index + 1], "right");
+            checkRightFrame(index + 1);
+        }
+    }
+    function checkBottomFrame(index) {
+        if (index < frameCount * (frameCount - 1)) {
+            //bottom side
+            if (logging) {
+                console.log("----");
+                console.log("bottom side");
+                console.log(frames[index + frameCount].options);
+            }
+            compareAndSetOptions(frames[index], frames[index + frameCount], "bottom");
+            checkBottomFrame(index + frameCount);
+        }
+    }
+    function checkFrameSidesCW(index) {
+        checkTopFrame(index);
+        checkRightFrame(index);
+        checkBottomFrame(index);
+        checkLeftFrame(index);
+    }
+    function checkFrameSidesCCW(index) {
+        checkTopFrame(index);
+        checkLeftFrame(index);
+        checkBottomFrame(index);
+        checkRightFrame(index);
     }
     function setOptions(index, options) {
         frames[index].options = options;
@@ -350,12 +402,12 @@ var WFC2;
     function colapsTiles() {
         for (let index = 0; index < frames.length; index++) {
             if (!isColapse(frames[index])) {
-                checkFrameSides(index);
+                checkFrameSidesCW(index);
             }
         }
         for (let index = frames.length - 1; index > 0; index--) {
             if (!isColapse(frames[index])) {
-                checkFrameSides(index);
+                checkFrameSidesCCW(index);
             }
         }
     }

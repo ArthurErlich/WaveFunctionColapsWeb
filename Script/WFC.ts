@@ -67,7 +67,7 @@ namespace WFC3 {
 
   //StrightTile |
   tiles[1].up = new Set<Tile>([tiles[1], tiles[3]]);
-  tiles[1].right = new Set<Tile>([tiles[1], tiles[0]]);
+  tiles[1].right = new Set<Tile>([tiles[1], tiles[0], tiles[3]]);
   tiles[1].down = new Set<Tile>([tiles[1]]);
   tiles[1].left = new Set<Tile>([tiles[1], tiles[0]]);
 
@@ -85,13 +85,18 @@ namespace WFC3 {
 
   //----Start of Render----\\
   setup();
-  initFrame();
+  // initFrame();
   drawCanvas();
   //should be in a loop until everything is collapsed
   //Calculate Entropy to other tiles
-  calculateEntropy();
-  waveFunction();
-  drawCanvas();
+  // calculateEntropy();
+  // waveFunction();
+
+  document.body.addEventListener("click", (event) => {
+    console.clear();
+    calculateEntropy();
+    drawCanvas();
+  });
 
   function setup(): void {
     createCanvas();
@@ -99,8 +104,8 @@ namespace WFC3 {
   }
 
   function initFrame(): void {
-    let frame = frameElements[5]; //Math.round((frameCount * frameCount) / 2)
-    frame.options = [tiles[2]];
+    let frame = frameElements[12]; //Math.round((frameCount * frameCount) / 2)
+    frame.options = [tiles[1]];
   }
 
   function drawCanvas(): void {
@@ -134,7 +139,7 @@ namespace WFC3 {
         element.setAttribute("id", "frame");
         element.dataset.index = i.toString();
         element.dataset.x = x.toString();
-        element.dataset.y = x.toString();
+        element.dataset.y = y.toString();
 
         element.dataset.colapsed = "false";
 
@@ -154,8 +159,12 @@ namespace WFC3 {
         element.addEventListener("mousedown", (event) => {
           element.classList.add("selected");
           let target: Frame = event.target as Frame;
+          let index: number = Math.floor(Math.random() * target.options.length);
           console.log(target);
           console.log(target.options);
+          console.log("Selection Tile with Frame", index);
+
+          target.options = [target.options[index]];
         });
         element.addEventListener("mouseup", () => {
           element.classList.remove("selected");
@@ -178,40 +187,44 @@ namespace WFC3 {
   }
 
   function waveFunction(): boolean {
-    //List of Frames with least entropy to be colapsed
-    let toColapseFrames: Set<Frame> = new Set<Frame>();
+    // //List of Frames with least entropy to be colapsed
+    // let toColapseFrames: Set<Frame> = new Set<Frame>();
+    // let leastEntropy = tiles.length; //start with maximum
 
-    //Check every Frame if one is colapsed
-    for (let i = 0; i < frameElements.length; i++) {
-      const frame = frameElements[i];
-      //Check if Frame has only one Option
+    // //Check every Frame if one is colapsed
+    // for (let i = 0; i < frameElements.length; i++) {
+    //   const frame = frameElements[i];
+    //   //Check if Frame has only one Option
 
-      if (isColapse(frame)) {
-        drawImage(frame);
-      }
+    //   if (isColapse(frame)) {
+    //     drawImage(frame);
+    //   }
 
-      //start to get tile wiht last entorpy / options
-      let leastEntropy = tiles.length; //start with maximum
-      for (let i = 0; i < frameElements.length; i++) {
-        const frame = frameElements[i];
-        if (!isColapse(frame)) {
-          if (frame.options.length < leastEntropy) {
-            leastEntropy = frame.options.length;
-          }
-        }
-      }
-      //add tile to list with least entropy/options
-      for (let i = 0; i < frameElements.length; i++) {
-        if (frame.options.length == leastEntropy) {
-          toColapseFrames.add(frame);
-        }
-      }
+    //   //start to get tile wiht last entorpy / options
+    //   console.log("Start Entropy: ", leastEntropy);
 
-      //now start the colaps of frames
-      if (toColapseFrames.size < 1) {
-        return true;
-      }
-    }
+    //   for (let i = 0; i < frameElements.length; i++) {
+    //     const frame = frameElements[i];
+    //     if (!isColapse(frame)) {
+    //       if (frame.options.length < leastEntropy) {
+    //         leastEntropy = frame.options.length;
+    //       }
+    //     }
+    //   }
+    //   console.log("Smallest Entropy: ", leastEntropy);
+
+    //   //add tile to list with least entropy/options
+    //   if (frame.options.length === leastEntropy) {
+    //     toColapseFrames.add(frame);
+    //   }
+
+    //   //now start the colaps of frames
+    //   if (toColapseFrames.size < 1) {
+    //     console.log("Found frames to Colaps: ", toColapseFrames);
+
+    //     return true;
+    //   }
+    // }
     return false;
   }
 
@@ -219,24 +232,25 @@ namespace WFC3 {
     //Stort from left to right, keep treack of changed tiles and rerun if tiles changed.
     let updatedTiles: number = 0;
     do {
-      updatedTiles = 0;
+      // updatedTiles = 0;
       for (let i = 0; i < frameElements.length; i++) {
         //Check sides top left bottom right remove entoryp/options of own tile if not compatible
         const frame = frameElements[i];
 
         if (checkFrame(frame, Directions.TOP)) {
-          //   updatedTiles++;
+          // updatedTiles++;
         }
-        // if (checkFrame(frame, Directions.RIGHT)) {
-        //   //   updatedTiles++;
-        // }
-        // if (checkFrame(frame, Directions.BOTTOM)) {
-        //   //   updatedTiles++;
-        // }
-        // if (checkFrame(frame, Directions.LEFT)) {
-        //   //   updatedTiles++;
-        // }
+        if (checkFrame(frame, Directions.RIGHT)) {
+          // updatedTiles++;
+        }
+        if (checkFrame(frame, Directions.BOTTOM)) {
+          // updatedTiles++;
+        }
+        if (checkFrame(frame, Directions.LEFT)) {
+          // updatedTiles++;
+        }
       }
+      updatedTiles--;
     } while (updatedTiles > 0);
   }
   function checkFrame(frame: Frame, direction: Directions): boolean {
@@ -264,7 +278,7 @@ namespace WFC3 {
         break;
       case Directions.BOTTOM:
         neighborIndex = frame.index + frameCount;
-        if (!(frame.index < frameCount * frameCount - frameCount - 1)) {
+        if (!(frame.index < frameCount * frameCount - frameCount)) {
           return isChanged;
         }
         break;
@@ -346,45 +360,108 @@ namespace WFC3 {
     let possibleOptions: Tile[] = new Array();
     //Compare the sides with allowd option
     //go trouhg all Options and compare the Sets
-    console.log("Comparing");
-    console.log(neighbor);
-    console.log(Directions[direction]);
+
+    console.log("Comparing Frame:", frame, " Neighbor: ", neighbor, " Looking: ", Directions[direction]);
+    console.log("Frame has: ", frame.options.length, "Options. Neighbot has: ", neighbor.options.length, "Options.");
+
+    if (frame.options.length < neighbor.options.length) {
+      console.log("I am smaller, skipping check");
+      return frame.options;
+    }
 
     switch (direction) {
       case Directions.TOP:
-        for (let up = 0; up < frame.options.length; up++) {
-          const upOptions = frame.options[up];
-          for (let down = 0; down < neighbor.options.length; down++) {
-            const downOptions = neighbor.options[down];
-            if (downOptions.down == undefined || upOptions.up == undefined) {
-              continue;
+        frame.options.forEach((frameOptions) => {
+          neighbor.options.forEach((neighborOptions) => {
+            const aOptions = frameOptions.up;
+            const bOptions = neighborOptions.down;
+
+            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (!(bOptions == undefined || aOptions == undefined)) {
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              addElementIfNotExist(foundOptions, possibleOptions);
+              console.log("Possilbe Options: ", possibleOptions);
             }
-            possibleOptions = compareFrameOptions(upOptions.up, downOptions.down);
-          }
-        }
+          });
+        });
+        break;
+
+      case Directions.BOTTOM:
+        frame.options.forEach((frameOptions) => {
+          neighbor.options.forEach((neighborOptions) => {
+            const aOptions = frameOptions.down;
+            const bOptions = neighborOptions.up;
+
+            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (!(bOptions == undefined || aOptions == undefined)) {
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              addElementIfNotExist(foundOptions, possibleOptions);
+              console.log("Possilbe Options: ", possibleOptions);
+            }
+          });
+        });
+        break;
+      case Directions.LEFT:
+        frame.options.forEach((frameOptions) => {
+          neighbor.options.forEach((neighborOptions) => {
+            const aOptions = frameOptions.left;
+            const bOptions = neighborOptions.right;
+
+            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (!(bOptions == undefined || aOptions == undefined)) {
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              addElementIfNotExist(foundOptions, possibleOptions);
+              console.log("Possilbe Options: ", possibleOptions);
+            }
+          });
+        });
+        break;
+      case Directions.RIGHT:
+        frame.options.forEach((frameOptions) => {
+          neighbor.options.forEach((neighborOptions) => {
+            const aOptions = frameOptions.right;
+            const bOptions = neighborOptions.left;
+
+            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (!(bOptions == undefined || aOptions == undefined)) {
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              addElementIfNotExist(foundOptions, possibleOptions);
+              console.log("Possilbe Options: ", possibleOptions);
+            }
+          });
+        });
         break;
       default:
         possibleOptions = frame.options;
         break;
+    }
+    if (possibleOptions.length > frame.options.length) {
+      return frame.options;
     }
     return possibleOptions;
   }
 
   function compareFrameOptions(aSet: Set<Tile>, bSet: Set<Tile>): Tile[] {
     let possibleOptions: Tile[] = new Array();
-    console.log(aSet.size);
-    console.log(bSet.size);
-
     aSet.forEach((a) => {
       bSet.forEach((b) => {
-        console.log(a.index + " =? " + b.index);
+        console.log("Compering options ", a.index, " ", b.index);
         if (a.index == b.index) {
-          possibleOptions.push(a);
+          console.log("Found a Compatible Tile. Adding to List: ", b);
+          possibleOptions.push(b);
         }
       });
     });
-    console.log(possibleOptions);
-
     return possibleOptions;
+  }
+
+  function addElementIfNotExist(option: Tile[], possibleOptions: Tile[]) {
+    option.forEach((element) => {
+      let found: Tile | undefined = possibleOptions.find((obj) => obj.index === element.index);
+      //add element to options only if its not exist
+      if (found === undefined) {
+        possibleOptions.push(element);
+      }
+    });
   }
 }

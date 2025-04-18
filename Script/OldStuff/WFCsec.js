@@ -426,3 +426,4 @@ var WFC2;
 function Sleep(milliseconds) {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
+//# sourceMappingURL=WFCsec.js.map

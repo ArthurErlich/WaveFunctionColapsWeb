@@ -26,6 +26,13 @@ var WFC3;
             this.left = left;
         }
     }
+    let Directions;
+    (function (Directions) {
+        Directions[Directions["TOP"] = 0] = "TOP";
+        Directions[Directions["LEFT"] = 1] = "LEFT";
+        Directions[Directions["BOTTOM"] = 2] = "BOTTOM";
+        Directions[Directions["RIGHT"] = 3] = "RIGHT";
+    })(Directions || (Directions = {}));
     const tiles = [
         //BlankTile
         new Tile(0, 0, "../images/blank.png"),
@@ -36,11 +43,11 @@ var WFC3;
         //CornerTile right, down
         new Tile(3, 0, "../images/corner.png"),
     ];
-    //setting compatible options for Tiles Searching for better listing!
+    //Setting compatible options for Tiles Searching for better listing!
     //BlankTile
     tiles[0].up = new Set([tiles[0], tiles[2]]);
     tiles[0].right = new Set([tiles[0], tiles[1]]);
-    tiles[0].down = new Set([tiles[0], tiles[2]]);
+    tiles[0].down = new Set([tiles[0], tiles[2], tiles[3]]);
     tiles[0].left = new Set([tiles[0], tiles[1]]);
     //StrightTile |
     tiles[1].up = new Set([tiles[1], tiles[3]]);
@@ -50,10 +57,10 @@ var WFC3;
     //StrightTile - 90°
     tiles[2].up = new Set([tiles[2], tiles[0]]);
     tiles[2].right = new Set([tiles[2]]);
-    tiles[2].down = new Set([tiles[2], tiles[0]]);
+    tiles[2].down = new Set([tiles[2], tiles[0], tiles[3]]);
     tiles[2].left = new Set([tiles[2], tiles[3]]);
     //CronerTile right, down
-    tiles[3].up = new Set([tiles[0], tiles[1]]);
+    tiles[3].up = new Set([tiles[0], tiles[2]]);
     tiles[3].right = new Set([tiles[2]]);
     tiles[3].down = new Set([tiles[1]]);
     tiles[3].left = new Set([tiles[0], tiles[2]]);
@@ -62,6 +69,8 @@ var WFC3;
     initFrame();
     drawCanvas();
     //should be in a loop until everything is collapsed
+    //Calculate Entropy to other tiles
+    calculateEntropy();
     waveFunction();
     drawCanvas();
     function setup() {
@@ -69,7 +78,7 @@ var WFC3;
         createFrameElement();
     }
     function initFrame() {
-        let frame = frameElements[1]; //Math.round((frameCount * frameCount) / 2)
+        let frame = frameElements[5]; //Math.round((frameCount * frameCount) / 2)
         frame.options = [tiles[2]];
     }
     function drawCanvas() {
@@ -105,7 +114,7 @@ var WFC3;
                 element.style.height = frameSize - 2 + "px";
                 element.style.backgroundSize = "cover";
                 element.style.border = "1px solid white";
-                element.style.color = "white";
+                element.style.color = "red";
                 element.style.display = "flex";
                 element.style.justifyContent = "center";
                 element.style.alignItems = "center";
@@ -113,8 +122,11 @@ var WFC3;
                 frameElements[i] = element;
                 canvas.appendChild(element);
                 i++;
-                element.addEventListener("mousedown", () => {
+                element.addEventListener("mousedown", (event) => {
                     element.classList.add("selected");
+                    let target = event.target;
+                    console.log(target);
+                    console.log(target.options);
                 });
                 element.addEventListener("mouseup", () => {
                     element.classList.remove("selected");
@@ -143,8 +155,6 @@ var WFC3;
             if (isColapse(frame)) {
                 drawImage(frame);
             }
-            //Calculate Entropy to other tiles
-            calculateEntropy();
             //start to get tile wiht last entorpy / options
             let leastEntropy = tiles.length; //start with maximum
             for (let i = 0; i < frameElements.length; i++) {
@@ -172,92 +182,156 @@ var WFC3;
         //Stort from left to right, keep treack of changed tiles and rerun if tiles changed.
         let updatedTiles = 0;
         do {
-            console.log("UPDATE");
             updatedTiles = 0;
             for (let i = 0; i < frameElements.length; i++) {
                 //Check sides top left bottom right remove entoryp/options of own tile if not compatible
                 const frame = frameElements[i];
-                if (checkRightFrame(frame)) {
+                if (checkFrame(frame, Directions.TOP)) {
                     //   updatedTiles++;
                 }
-                if (checkLeftFrame(frame)) {
-                    //   updatedTiles++;
-                }
-                if (checkBottomFrame(frame)) {
-                    //   updatedTiles++;
-                }
-                if (checkTopFrame(frame)) {
-                    //   updatedTiles++;
-                }
+                // if (checkFrame(frame, Directions.RIGHT)) {
+                //   //   updatedTiles++;
+                // }
+                // if (checkFrame(frame, Directions.BOTTOM)) {
+                //   //   updatedTiles++;
+                // }
+                // if (checkFrame(frame, Directions.LEFT)) {
+                //   //   updatedTiles++;
+                // }
             }
         } while (updatedTiles > 0);
     }
-    function checkTopFrame(frame) {
+    function checkFrame(frame, direction) {
+        let neighbor;
+        let neighborIndex;
         let isChanged = false;
-        if (frame.index - frameCount > 0) {
-            let neighbor = frameElements[frame.index - frameCount];
-            let possibleOptions;
-            if (neighbor.options.length == frame.options.length) {
-                return isChanged;
-            }
-            isChanged = true;
-            possibleOptions = compareAndGetOptions(frame, neighbor, "");
-            return isChanged; //DEBUG
-            frame.options = possibleOptions;
+        let possibleOptions;
+        if (frame.options.length == 1) {
+            return isChanged;
         }
+        //Check Frame direktion if a Frame exist
+        switch (direction) {
+            case Directions.TOP:
+                neighborIndex = frame.index - frameCount;
+                if (!(neighborIndex > 0)) {
+                    return isChanged;
+                }
+                break;
+            case Directions.RIGHT:
+                neighborIndex = frame.index + 1;
+                if (!(neighborIndex % frameCount !== 0)) {
+                    return isChanged;
+                }
+                break;
+            case Directions.BOTTOM:
+                neighborIndex = frame.index + frameCount;
+                if (!(frame.index < frameCount * frameCount - frameCount - 1)) {
+                    return isChanged;
+                }
+                break;
+            case Directions.LEFT:
+                neighborIndex = frame.index - 1;
+                if (!(frame.index % frameCount !== 0)) {
+                    return isChanged;
+                }
+                break;
+            default:
+                return isChanged;
+        }
+        neighbor = frameElements[neighborIndex];
+        if (neighbor.options.length == frame.options.length) {
+            return isChanged;
+        }
+        isChanged = true;
+        possibleOptions = compareAndGetOptions(frame, neighbor, direction);
+        frame.options = possibleOptions;
         return isChanged;
     }
-    function checkLeftFrame(frame) {
-        let isChanged = false;
-        if (frame.index % frameCount !== 0) {
-            let neighbor = frameElements[frame.index - 1];
-            let possibleOptions;
-            if (neighbor.options.length == frame.options.length) {
-                return isChanged;
-            }
-            isChanged = true;
-            possibleOptions = compareAndGetOptions(frame, neighbor, "");
-            return isChanged; //DEBUG
-            frame.options = possibleOptions;
-        }
-        return isChanged;
-    }
-    function checkBottomFrame(frame) {
-        let isChanged = false;
-        if (frame.index < frameCount * frameCount - frameCount - 1) {
-            let neighbor = frameElements[frame.index + frameCount];
-            let possibleOptions;
-            if (neighbor.options.length == frame.options.length) {
-                return isChanged;
-            }
-            isChanged = true;
-            possibleOptions = compareAndGetOptions(frame, neighbor, "");
-            return isChanged; //DEBUG
-            frame.options = possibleOptions;
-        }
-        return isChanged;
-    }
-    function checkRightFrame(frame) {
-        let isChanged = false;
-        if ((frame.index + 1) % frameCount !== 0) {
-            let neighbor = frameElements[frame.index + 1];
-            let possibleOptions;
-            if (neighbor.options.length == frame.options.length) {
-                return isChanged;
-            }
-            isChanged = true;
-            possibleOptions = compareAndGetOptions(frame, neighbor, "");
-            return isChanged; //DEBUG
-            frame.options = possibleOptions;
-        }
-        return isChanged;
-    }
-    function compareAndGetOptions(frame, neighbor, direct) {
+    // function checkLeftFrame(frame: Frame): boolean {
+    //   let isChanged = false;
+    //   if (frame.index % frameCount !== 0) {
+    //     let neighbor: Frame = frameElements[frame.index - 1];
+    //     let possibleOptions: Tile[];
+    //     if (neighbor.options.length == frame.options.length) {
+    //       return isChanged;
+    //     }
+    //     isChanged = true;
+    //     possibleOptions = compareAndGetOptions(frame, neighbor, "");
+    //     return isChanged; //DEBUG
+    //     frame.options = possibleOptions;
+    //   }
+    //   return isChanged;
+    // }
+    // function checkBottomFrame(frame: Frame): boolean {
+    //   let isChanged = false;
+    //   if (frame.index < frameCount * frameCount - frameCount - 1) {
+    //     let neighbor: Frame = frameElements[frame.index + frameCount];
+    //     let possibleOptions: Tile[];
+    //     if (neighbor.options.length == frame.options.length) {
+    //       return isChanged;
+    //     }
+    //     isChanged = true;
+    //     possibleOptions = compareAndGetOptions(frame, neighbor, "");
+    //     return isChanged; //DEBUG
+    //     frame.options = possibleOptions;
+    //   }
+    //   return isChanged;
+    // }
+    // function checkRightFrame(frame: Frame): boolean {
+    //   let isChanged = false;
+    //   if ((frame.index + 1) % frameCount !== 0) {
+    //     let neighbor: Frame = frameElements[frame.index + 1];
+    //     let possibleOptions: Tile[];
+    //     if (neighbor.options.length == frame.options.length) {
+    //       return isChanged;
+    //     }
+    //     isChanged = true;
+    //     possibleOptions = compareAndGetOptions(frame, neighbor, "");
+    //     return isChanged; //DEBUG
+    //     frame.options = possibleOptions;
+    //   }
+    //   return isChanged;
+    // }
+    function compareAndGetOptions(frame, neighbor, direction) {
+        let possibleOptions = new Array();
         //Compare the sides with allowd option
         //go trouhg all Options and compare the Sets
-        //example direction down
-        console.log(frame.options[0].down);
-        console.log(frame.options[0].up);
-        return [];
+        console.log("Comparing");
+        console.log(neighbor);
+        console.log(Directions[direction]);
+        switch (direction) {
+            case Directions.TOP:
+                for (let up = 0; up < frame.options.length; up++) {
+                    const upOptions = frame.options[up];
+                    for (let down = 0; down < neighbor.options.length; down++) {
+                        const downOptions = neighbor.options[down];
+                        if (downOptions.down == undefined || upOptions.up == undefined) {
+                            continue;
+                        }
+                        possibleOptions = compareFrameOptions(upOptions.up, downOptions.down);
+                    }
+                }
+                break;
+            default:
+                possibleOptions = frame.options;
+                break;
+        }
+        return possibleOptions;
+    }
+    function compareFrameOptions(aSet, bSet) {
+        let possibleOptions = new Array();
+        console.log(aSet.size);
+        console.log(bSet.size);
+        aSet.forEach((a) => {
+            bSet.forEach((b) => {
+                console.log(a.index + " =? " + b.index);
+                if (a.index == b.index) {
+                    possibleOptions.push(a);
+                }
+            });
+        });
+        console.log(possibleOptions);
+        return possibleOptions;
     }
 })(WFC3 || (WFC3 = {}));
+//# sourceMappingURL=WFC.js.map

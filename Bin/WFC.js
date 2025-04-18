@@ -232,3 +232,4 @@ var wfc;
     }
     //fix tileList -> make objetct to save the Entropy and if the tile is collapsed
 })(wfc || (wfc = {}));
+//# sourceMappingURL=WFC.js.map

@@ -24,3 +24,4 @@ var WFC2TileGen;
         return [""];
     }
 })(WFC2TileGen || (WFC2TileGen = {}));
+//# sourceMappingURL=WFCTileGenerator.js.map

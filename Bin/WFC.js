@@ -48,7 +48,7 @@ var wfc;
         new Tile(0, "../images/blank.png", [new TRot(0, 0)], //up
         [new TRot(0, 0), new TRot(1, 0)], //right
         [new TRot(0, 0)], //down
-        [new TRot(0, 0), new TRot(1, 0)]), //left
+        [new TRot(0, 0), new TRot(1, 0)]),
         //Stright
         new Tile(0, "../images/stright.png", [new TRot(1, 0)], //up
         [new TRot(0, 0), new TRot(1, 0)], //right

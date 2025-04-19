@@ -1,3 +1,8 @@
+/**
+ * @author Arthur Erlich
+ * TODO: Entropy Checker needs rework, there is s a bug or some "Komische" behavour
+ */
+
 namespace WFC3 {
   const canvasDIM: number = 500;
   const frameCount: number = 4;
@@ -18,25 +23,29 @@ namespace WFC3 {
   }
   customElements.define("custom-frame", Frame);
 
+
   class Tile {
     index: number;
     rotation: number;
     image: string;
 
-    up?: Set<Tile>;
-    right?: Set<Tile>;
-    down?: Set<Tile>;
-    left?: Set<Tile>;
+    /* 
+    Change to StyleCode: Convert color code of 3 Points to hash value eg.:
+    010 for left:White, right:Wihte, middle,Black -> sha256(string)
+    I can use this hash for comparisong later
+    
+    BTW: Hashing doese not realy exist in vanilla JS....
+    */
 
-    constructor(index: number, rotation: number, image: string, up?: Set<Tile>, right?: Set<Tile>, down?: Set<Tile>, left?: Set<Tile>) {
+    up: string = "";
+    right: string = "";
+    down: string = "";
+    left: string = "";
+
+    constructor(index: number, rotation: number, image: string) {
       this.index = index;
       this.rotation = rotation;
       this.image = image;
-
-      this.up = up;
-      this.right = right;
-      this.down = down;
-      this.left = left;
     }
   }
 
@@ -60,28 +69,28 @@ namespace WFC3 {
   //Setting compatible options for Tiles Searching for better listing!
 
   //BlankTile
-  tiles[0].up = new Set<Tile>([tiles[0], tiles[2]]);
-  tiles[0].right = new Set<Tile>([tiles[0], tiles[1]]);
-  tiles[0].down = new Set<Tile>([tiles[0], tiles[2], tiles[3]]);
-  tiles[0].left = new Set<Tile>([tiles[0], tiles[1]]);
+  tiles[0].up = "000";
+  tiles[0].right = "000";
+  tiles[0].down = "000";
+  tiles[0].left = "000";
 
   //StrightTile |
-  tiles[1].up = new Set<Tile>([tiles[1], tiles[3]]);
-  tiles[1].right = new Set<Tile>([tiles[1], tiles[0], tiles[3]]);
-  tiles[1].down = new Set<Tile>([tiles[1]]);
-  tiles[1].left = new Set<Tile>([tiles[1], tiles[0]]);
+  tiles[1].up = "010";
+  tiles[1].right = "000";
+  tiles[1].down = "010";
+  tiles[1].left = "000;"
 
   //StrightTile - 90°
-  tiles[2].up = new Set<Tile>([tiles[2], tiles[0]]);
-  tiles[2].right = new Set<Tile>([tiles[2]]);
-  tiles[2].down = new Set<Tile>([tiles[2], tiles[0], tiles[3]]);
-  tiles[2].left = new Set<Tile>([tiles[2], tiles[3]]);
+  tiles[2].up = "000";
+  tiles[2].right = "010";
+  tiles[2].down = "000";
+  tiles[2].left = "010";
 
   //CronerTile right, down
-  tiles[3].up = new Set<Tile>([tiles[0], tiles[2]]);
-  tiles[3].right = new Set<Tile>([tiles[2]]);
-  tiles[3].down = new Set<Tile>([tiles[1]]);
-  tiles[3].left = new Set<Tile>([tiles[0], tiles[2]]);
+  tiles[3].up = "000";
+  tiles[3].right = "010";
+  tiles[3].down = "010";
+  tiles[3].left = "000";
 
   //----Start of Render----\\
   setup();
@@ -378,7 +387,7 @@ namespace WFC3 {
 
             console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
             if (!(bOptions == undefined || aOptions == undefined)) {
-              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
               console.log("Possilbe Options: ", possibleOptions);
             }
@@ -394,7 +403,7 @@ namespace WFC3 {
 
             console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
             if (!(bOptions == undefined || aOptions == undefined)) {
-              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
               console.log("Possilbe Options: ", possibleOptions);
             }
@@ -409,7 +418,7 @@ namespace WFC3 {
 
             console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
             if (!(bOptions == undefined || aOptions == undefined)) {
-              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
               console.log("Possilbe Options: ", possibleOptions);
             }
@@ -424,7 +433,7 @@ namespace WFC3 {
 
             console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
             if (!(bOptions == undefined || aOptions == undefined)) {
-              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions);
+              const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
               console.log("Possilbe Options: ", possibleOptions);
             }
@@ -441,17 +450,12 @@ namespace WFC3 {
     return possibleOptions;
   }
 
-  function compareFrameOptions(aSet: Set<Tile>, bSet: Set<Tile>): Tile[] {
+  function compareFrameOptions(a: string, b: string, tile: Tile): Tile[] {
     let possibleOptions: Tile[] = new Array();
-    aSet.forEach((a) => {
-      bSet.forEach((b) => {
-        console.log("Compering options ", a.index, " ", b.index);
-        if (a.index == b.index) {
-          console.log("Found a Compatible Tile. Adding to List: ", b);
-          possibleOptions.push(b);
-        }
-      });
-    });
+    if (a === b) {
+      console.log("Found a Compatible Tile. Adding to List: ", b);
+      possibleOptions.push(tile);//TODOO: Add Tile of Options
+    }
     return possibleOptions;
   }
 

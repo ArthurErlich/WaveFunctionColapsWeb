@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var WFC2;
 (function (WFC2) {
     const logging = false;
@@ -91,17 +82,15 @@ var WFC2;
         console.log(frames);
         console.log("----");
     }
-    function start() {
-        return __awaiter(this, void 0, void 0, function* () {
-            do {
-                console.log("--WAVE START--");
-                draw();
-                wafeFunction();
-                //console.log(frames);
-                console.log("--WAVE END--");
-                yield Sleep(3000);
-            } while (!waveColapsed); // !waveColapsed
-        });
+    async function start() {
+        do {
+            console.log("--WAVE START--");
+            draw();
+            wafeFunction();
+            //console.log(frames);
+            console.log("--WAVE END--");
+            await Sleep(3000);
+        } while (!waveColapsed); // !waveColapsed
     }
     function setup() {
         createCanvas();
@@ -327,7 +316,6 @@ var WFC2;
     }
     //--------------------compare and set options--------------------------------
     function compareAndSetOptions(a, b, direction) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
         let aOpt = new Set();
         switch (direction) {
             case "top":
@@ -336,9 +324,9 @@ var WFC2;
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let optA = 0; optA < ((_a = a.options[indexA].up) === null || _a === void 0 ? void 0 : _a.size); optA++) {
+                    for (let optA = 0; optA < a.options[indexA].up?.size; optA++) {
                         for (let indexB = 0; indexB < b.options.length; indexB++) {
-                            for (let optB = 0; optB < ((_b = b.options[indexB].down) === null || _b === void 0 ? void 0 : _b.size); optB++) {
+                            for (let optB = 0; optB < b.options[indexB].down?.size; optB++) {
                                 if (JSON.stringify(Array.from(a.options[indexA].up)[optA]) === JSON.stringify(Array.from(b.options[indexB].up)[optB])) {
                                     aOpt.add(a.options[indexA]);
                                 }
@@ -354,9 +342,9 @@ var WFC2;
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let optA = 0; optA < ((_c = a.options[indexA].right) === null || _c === void 0 ? void 0 : _c.size); optA++) {
+                    for (let optA = 0; optA < a.options[indexA].right?.size; optA++) {
                         for (let indexB = 0; indexB < b.options.length; indexB++) {
-                            for (let optB = 0; optB < ((_d = b.options[indexB].left) === null || _d === void 0 ? void 0 : _d.size); optB++) {
+                            for (let optB = 0; optB < b.options[indexB].left?.size; optB++) {
                                 if (JSON.stringify(Array.from(a.options[indexA].right)[optA]) === JSON.stringify(Array.from(b.options[indexB].left)[optB])) {
                                     aOpt.add(a.options[indexA]);
                                 }
@@ -372,9 +360,9 @@ var WFC2;
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let optA = 0; optA < ((_e = a.options[indexA].down) === null || _e === void 0 ? void 0 : _e.size); optA++) {
+                    for (let optA = 0; optA < a.options[indexA].down?.size; optA++) {
                         for (let indexB = 0; indexB < b.options.length; indexB++) {
-                            for (let optB = 0; optB < ((_f = b.options[indexB].up) === null || _f === void 0 ? void 0 : _f.size); optB++) {
+                            for (let optB = 0; optB < b.options[indexB].up?.size; optB++) {
                                 if (JSON.stringify(Array.from(a.options[indexA].down)[optA]) === JSON.stringify(Array.from(b.options[indexB].up)[optB])) {
                                     aOpt.add(a.options[indexA]);
                                 }
@@ -390,9 +378,9 @@ var WFC2;
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
-                    for (let optA = 0; optA < ((_g = a.options[indexA].left) === null || _g === void 0 ? void 0 : _g.size); optA++) {
+                    for (let optA = 0; optA < a.options[indexA].left?.size; optA++) {
                         for (let indexB = 0; indexB < b.options.length; indexB++) {
-                            for (let optB = 0; optB < ((_h = b.options[indexB].right) === null || _h === void 0 ? void 0 : _h.size); optB++) {
+                            for (let optB = 0; optB < b.options[indexB].right?.size; optB++) {
                                 if (JSON.stringify(Array.from(a.options[indexA].left)[optA]) === JSON.stringify(Array.from(b.options[indexB].right)[optB])) {
                                     aOpt.add(a.options[indexA]);
                                 }

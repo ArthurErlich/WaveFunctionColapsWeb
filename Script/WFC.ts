@@ -1,11 +1,13 @@
 /**
  * @author Arthur Erlich
- * TODO: Entropy Checker needs rework, there is s a bug or some "Komische" behavour
+ * 
  */
 
 namespace WFC3 {
-  const canvasDIM: number = 500;
-  const frameCount: number = 4;
+
+  let canvasDIM: number = 500;
+  let frameCount: number = 10;
+  const logging: boolean = false;
 
   //Canvas and Frames setup
   const canvas: HTMLElement = document.createElement("div");
@@ -56,6 +58,11 @@ namespace WFC3 {
     RIGHT,
   }
 
+  interface Config {
+    tilesX: number;
+    canvasDimPX: number;
+  }
+
   const tiles: Tile[] = [
     //BlankTile
     new Tile(0, 0, "../images/blank.png"),
@@ -65,6 +72,8 @@ namespace WFC3 {
     new Tile(2, 1, "../images/stright.png"),
     //CornerTile right, down
     new Tile(3, 0, "../images/corner.png"),
+    //CornerTile down, left
+    new Tile(4, 1, "../images/corner.png"),
   ];
   //Setting compatible options for Tiles Searching for better listing!
 
@@ -78,7 +87,7 @@ namespace WFC3 {
   tiles[1].up = "010";
   tiles[1].right = "000";
   tiles[1].down = "010";
-  tiles[1].left = "000;"
+  tiles[1].left = "000";
 
   //StrightTile - 90°
   tiles[2].up = "000";
@@ -92,17 +101,30 @@ namespace WFC3 {
   tiles[3].down = "010";
   tiles[3].left = "000";
 
+  //CronerTile down, left
+  tiles[4].up = "000";
+  tiles[4].right = "000";
+  tiles[4].down = "010";
+  tiles[4].left = "010";
+
   //----Start of Render----\\
-  setup();
-  // initFrame();
-  drawCanvas();
-  //should be in a loop until everything is collapsed
-  //Calculate Entropy to other tiles
-  // calculateEntropy();
-  // waveFunction();
+  main();
+  async function main(): Promise<void> {
+    let config = await loadConfig("/Script/config.json");
+    frameCount = config.tilesX;
+    canvasDIM = config.canvasDimPX;
+    setup();
+    // initFrame();
+    drawCanvas();
+    //should be in a loop until everything is collapsed
+    //Calculate Entropy to other tiles
+    // calculateEntropy();
+    // waveFunction();
+  }
+
 
   document.body.addEventListener("click", (event) => {
-    console.clear();
+    // console.clear();
     calculateEntropy();
     drawCanvas();
   });
@@ -120,7 +142,7 @@ namespace WFC3 {
   function drawCanvas(): void {
     frameElements.forEach((element) => {
       element.innerText = element.options.length.toString();
-      if (isColapse(element)) {
+      if (isColapsed(element)) {
         drawImage(element);
       }
     });
@@ -130,7 +152,7 @@ namespace WFC3 {
     canvas.setAttribute("id", "canvas");
     canvas.style.width = canvasDIM + "px";
     canvas.style.height = canvasDIM + "px";
-    canvas.style.backgroundColor = "black";
+    // canvas.style.border = "solid 1px black";
     canvas.style.display = "flex";
     canvas.style.flexWrap = "wrap";
     document.body.appendChild(canvas);
@@ -149,13 +171,12 @@ namespace WFC3 {
         element.dataset.index = i.toString();
         element.dataset.x = x.toString();
         element.dataset.y = y.toString();
-
         element.dataset.colapsed = "false";
 
-        element.style.width = frameSize - 2 + "px";
-        element.style.height = frameSize - 2 + "px";
+        element.style.width = frameSize + "px";
+        element.style.height = frameSize + "px";
         element.style.backgroundSize = "cover";
-        element.style.border = "1px solid white";
+        // element.style.border = "1px solid white";
         element.style.color = "red";
         element.style.display = "flex";
         element.style.justifyContent = "center";
@@ -169,9 +190,11 @@ namespace WFC3 {
           element.classList.add("selected");
           let target: Frame = event.target as Frame;
           let index: number = Math.floor(Math.random() * target.options.length);
-          console.log(target);
-          console.log(target.options);
-          console.log("Selection Tile with Frame", index);
+          if (logging) {
+            console.log(target);
+            console.log(target.options);
+            console.log("Selection Tile with Frame", index);
+          }
 
           target.options = [target.options[index]];
         });
@@ -185,7 +208,8 @@ namespace WFC3 {
     }
   }
 
-  function isColapse(frame: Frame): boolean {
+  function isColapsed(frame: Frame): boolean {
+    frame.dataset.colapsed = "true";
     return frame.options.length == 1;
   }
 
@@ -196,9 +220,9 @@ namespace WFC3 {
   }
 
   function waveFunction(): boolean {
-    // //List of Frames with least entropy to be colapsed
-    // let toColapseFrames: Set<Frame> = new Set<Frame>();
-    // let leastEntropy = tiles.length; //start with maximum
+    //List of Frames with least entropy to be colapsed
+    let toColapseFrames: Set<Frame> = new Set<Frame>();
+    let leastEntropy = tiles.length; //start with maximum
 
     // //Check every Frame if one is colapsed
     // for (let i = 0; i < frameElements.length; i++) {
@@ -206,7 +230,10 @@ namespace WFC3 {
     //   //Check if Frame has only one Option
 
     //   if (isColapse(frame)) {
-    //     drawImage(frame);
+    // if (i == frameElements.length - 1){
+    //   return true;
+    // }
+    //      continue;
     //   }
 
     //   //start to get tile wiht last entorpy / options
@@ -247,17 +274,18 @@ namespace WFC3 {
         const frame = frameElements[i];
 
         if (checkFrame(frame, Directions.TOP)) {
-          // updatedTiles++;
+          updatedTiles++;
         }
         if (checkFrame(frame, Directions.RIGHT)) {
-          // updatedTiles++;
+          updatedTiles++;
         }
         if (checkFrame(frame, Directions.BOTTOM)) {
-          // updatedTiles++;
+          updatedTiles++;
         }
         if (checkFrame(frame, Directions.LEFT)) {
-          // updatedTiles++;
+          updatedTiles++;
         }
+
       }
       updatedTiles--;
     } while (updatedTiles > 0);
@@ -306,76 +334,38 @@ namespace WFC3 {
     if (neighbor.options.length == frame.options.length) {
       return isChanged;
     }
-    isChanged = true;
     possibleOptions = compareAndGetOptions(frame, neighbor, direction);
+
+    if (possibleOptions.length !== frame.options.length) {
+      isChanged = true;
+    }
+
     frame.options = possibleOptions;
 
     return isChanged;
   }
 
-  // function checkLeftFrame(frame: Frame): boolean {
-  //   let isChanged = false;
-  //   if (frame.index % frameCount !== 0) {
-  //     let neighbor: Frame = frameElements[frame.index - 1];
-  //     let possibleOptions: Tile[];
-
-  //     if (neighbor.options.length == frame.options.length) {
-  //       return isChanged;
-  //     }
-  //     isChanged = true;
-  //     possibleOptions = compareAndGetOptions(frame, neighbor, "");
-  //     return isChanged; //DEBUG
-
-  //     frame.options = possibleOptions;
-  //   }
-  //   return isChanged;
-  // }
-  // function checkBottomFrame(frame: Frame): boolean {
-  //   let isChanged = false;
-  //   if (frame.index < frameCount * frameCount - frameCount - 1) {
-  //     let neighbor: Frame = frameElements[frame.index + frameCount];
-  //     let possibleOptions: Tile[];
-
-  //     if (neighbor.options.length == frame.options.length) {
-  //       return isChanged;
-  //     }
-  //     isChanged = true;
-  //     possibleOptions = compareAndGetOptions(frame, neighbor, "");
-  //     return isChanged; //DEBUG
-
-  //     frame.options = possibleOptions;
-  //   }
-  //   return isChanged;
-  // }
-  // function checkRightFrame(frame: Frame): boolean {
-  //   let isChanged = false;
-  //   if ((frame.index + 1) % frameCount !== 0) {
-  //     let neighbor: Frame = frameElements[frame.index + 1];
-  //     let possibleOptions: Tile[];
-
-  //     if (neighbor.options.length == frame.options.length) {
-  //       return isChanged;
-  //     }
-  //     isChanged = true;
-  //     possibleOptions = compareAndGetOptions(frame, neighbor, "");
-  //     return isChanged; //DEBUG
-
-  //     frame.options = possibleOptions;
-  //   }
-  //   return isChanged;
-  // }
-
   function compareAndGetOptions(frame: Frame, neighbor: Frame, direction: Directions): Tile[] {
     let possibleOptions: Tile[] = new Array();
     //Compare the sides with allowd option
-    //go trouhg all Options and compare the Sets
+    //go through all Options and compare the Sets
 
-    console.log("Comparing Frame:", frame, " Neighbor: ", neighbor, " Looking: ", Directions[direction]);
-    console.log("Frame has: ", frame.options.length, "Options. Neighbot has: ", neighbor.options.length, "Options.");
+    if (logging) {
+      console.log("Comparing Frame:", frame, " Neighbor: ", neighbor, " Looking: ", Directions[direction]);
+      console.log("Frame has: ", frame.options.length, "Options. Neighbot has: ", neighbor.options.length, "Options.");
+    }
 
     if (frame.options.length < neighbor.options.length) {
-      console.log("I am smaller, skipping check");
+      if (logging) {
+        console.log("I am smaller, skipping check");
+      }
       return frame.options;
+    }
+    if (frame.options.length < 0 || neighbor.options.length < 0) {
+      if (logging) {
+        console.warn("There was a problem! \n one of the check has only 0 Frames!? Something went realy wrong");
+      }
+
     }
 
     switch (direction) {
@@ -385,11 +375,15 @@ namespace WFC3 {
             const aOptions = frameOptions.up;
             const bOptions = neighborOptions.down;
 
-            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (logging) {
+              console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            }
             if (!(bOptions == undefined || aOptions == undefined)) {
               const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
-              console.log("Possilbe Options: ", possibleOptions);
+              if (logging) {
+                console.log("Possilbe Options: ", possibleOptions);
+              }
             }
           });
         });
@@ -401,11 +395,15 @@ namespace WFC3 {
             const aOptions = frameOptions.down;
             const bOptions = neighborOptions.up;
 
-            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (logging) {
+              console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            }
             if (!(bOptions == undefined || aOptions == undefined)) {
               const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
-              console.log("Possilbe Options: ", possibleOptions);
+              if (logging) {
+                console.log("Possilbe Options: ", possibleOptions);
+              }
             }
           });
         });
@@ -416,11 +414,15 @@ namespace WFC3 {
             const aOptions = frameOptions.left;
             const bOptions = neighborOptions.right;
 
-            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (logging) {
+              console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            }
             if (!(bOptions == undefined || aOptions == undefined)) {
               const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
-              console.log("Possilbe Options: ", possibleOptions);
+              if (logging) {
+                console.log("Possilbe Options: ", possibleOptions);
+              }
             }
           });
         });
@@ -431,11 +433,15 @@ namespace WFC3 {
             const aOptions = frameOptions.right;
             const bOptions = neighborOptions.left;
 
-            console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            if (logging) {
+              console.log("Compatible Tiles: ", " A: ", aOptions, " B: ", bOptions);
+            }
             if (!(bOptions == undefined || aOptions == undefined)) {
               const foundOptions: Tile[] = compareFrameOptions(aOptions, bOptions, frameOptions);
               addElementIfNotExist(foundOptions, possibleOptions);
-              console.log("Possilbe Options: ", possibleOptions);
+              if (logging) {
+                console.log("Possilbe Options: ", possibleOptions);
+              }
             }
           });
         });
@@ -447,13 +453,18 @@ namespace WFC3 {
     if (possibleOptions.length > frame.options.length) {
       return frame.options;
     }
+    if (possibleOptions.length < 0) {
+      console.warn("Hey! I want to set 0 Options! Check me please!");
+    }
     return possibleOptions;
   }
 
   function compareFrameOptions(a: string, b: string, tile: Tile): Tile[] {
     let possibleOptions: Tile[] = new Array();
     if (a === b) {
-      console.log("Found a Compatible Tile. Adding to List: ", b);
+      if (logging) {
+        console.log("Found a Compatible Tile. Adding to List: ", b);
+      }
       possibleOptions.push(tile);//TODOO: Add Tile of Options
     }
     return possibleOptions;
@@ -467,5 +478,10 @@ namespace WFC3 {
         possibleOptions.push(element);
       }
     });
+  }
+  async function loadConfig(url: string): Promise<Config> {
+    let promise;
+    promise = await fetch(url);
+    return promise.json();
   }
 }

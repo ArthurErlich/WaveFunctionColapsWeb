@@ -1,4 +1,5 @@
 {
-    "tilesX": 10,
-    "canvasDimPX": 600
+    "tilesX": 50,
+    "canvasDimPX": 600,
+    "waitTime": 0.1
 }

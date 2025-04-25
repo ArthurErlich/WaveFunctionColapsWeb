@@ -6,10 +6,8 @@ var wfc;
     let gridSize = 2;
     let tileElement = new Array(gridSize * gridSize);
     let tileElementList = new Array(gridSize * gridSize);
-    //Tiles
     class Tile {
         constructor(rotation, imageURL, up, right, down, left) {
-            //name: string = "";
             this.rotation = 0;
             this.imageURL = "";
             this.rotation = rotation;
@@ -43,31 +41,8 @@ var wfc;
         }
     }
     const tileList = [
-        //Kreate a list for better fisualisation- maybe a JSON file?
-        //Blank
-        new Tile(0, "../images/blank.png", [new TRot(0, 0)], //up
-        [new TRot(0, 0), new TRot(1, 0)], //right
-        [new TRot(0, 0)], //down
-        [new TRot(0, 0), new TRot(1, 0)]), //left
-        //Stright
-        new Tile(0, "../images/stright.png", [new TRot(1, 0)], //up
-        [new TRot(0, 0), new TRot(1, 0)], //right
-        [new TRot(1, 0)], //down
-        [new TRot(0, 0), new TRot(1, 0)]), //left
-        /*
-        new Tile(1, "../images/stright.png",
-            [new TRot(0, 0)], //up
-            [new TRot(1, 1)], //right
-            [new TRot(1, 1)], //down
-            [new TRot(0, 0)]), //left
-    
-        //Corner
-        /*new Tile(0, "../images/corner.png",
-            [new TRot(0, 0)], //up
-            [new TRot(0, 0)], //right
-            [new TRot(0, 0)], //down
-            [new TRot(0, 0)]), //left
-    */
+        new Tile(0, "../images/blank.png", [new TRot(0, 0)], [new TRot(0, 0), new TRot(1, 0)], [new TRot(0, 0)], [new TRot(0, 0), new TRot(1, 0)]),
+        new Tile(0, "../images/stright.png", [new TRot(1, 0)], [new TRot(0, 0), new TRot(1, 0)], [new TRot(1, 0)], [new TRot(0, 0), new TRot(1, 0)]),
     ];
     const canvas = setUpCanvas();
     setGrid(gridSize);
@@ -79,14 +54,12 @@ var wfc;
         }
         colapsTileOne();
         console.log("start WVC");
-        //console.log(tileElementList);
         colapse();
         checkNeigbors(0);
     });
     function setUpCanvas() {
         const canvas = document.createElement("div");
         canvas.setAttribute("id", "canvas");
-        //console.log(canvas);
         canvas.style.width = canvasSize + "px";
         canvas.style.height = canvasSize + "px";
         canvas.style.backgroundColor = "black";
@@ -96,13 +69,11 @@ var wfc;
         return canvas;
     }
     function setGrid(size) {
-        //console.log("genGridSize: "+ size*size);
         tileElement = new Array(size * size);
         let i = 0;
         for (let x = 0; x < size; x++) {
             for (let y = 0; y < size; y++) {
                 tileElement[i] = canvas.appendChild(createtileElement(size, i));
-                //console.log("genTile: "+ (i));
                 i++;
             }
         }
@@ -122,13 +93,9 @@ var wfc;
         tileElement.style.flex;
         tileElement.addEventListener("click", () => {
             console.log((tileElementList[parseInt(tileElement.dataset.index)]).getPossibleTiles);
-            /*console.log("tileElement clicked: " + tileElement.dataset.index + "\n"
-                + "colapsed: " + tileElement.dataset.colapsed + "\n"
-                + "rotation: " + parseInt(tileElement.dataset.rotation!) * 90 + "°") // parseInt(tileElement.dataset.rotation) * 90 + "°" -> undefined?!*/
         });
         return tileElement;
     }
-    // to class!
     function fillTileElment(tile, tileElement) {
         console.log("filling Tile");
         tileElement.style.backgroundImage = "url(" + tile.imageURL + ")";
@@ -154,8 +121,6 @@ var wfc;
     function indexWithLeastEntropy() {
         let least = tileElementList.length;
         console.log(least);
-        //-> instand of setting entropy. just use the list of possible tieles
-        //console.log(tileElementList[0].getEntropy());
         for (let i = 0; i < tileList.length; i++) {
             if (tileElementList[i].getEntropy() < least) {
                 least = i;
@@ -165,13 +130,11 @@ var wfc;
         return tileElementList[0];
     }
     function checkNeigbors(index) {
-        //check left
         if (index % gridSize !== 0) {
             console.log("checkin " + (index - 1));
             let selectedTile = tileElementList[index];
             let tileLeft = tileElementList[index - 1];
             let tileRightElements = [];
-            //Chekc the if the tile is possilbe on the left
             selectedTile.possibleTiles.forEach(selection => {
                 tileLeft.possibleTiles.forEach(left => {
                     if (selection.left === left.right) {
@@ -179,39 +142,31 @@ var wfc;
                     tileRightElements.push(left);
                 });
             });
-            // console.log(tileRightElements);
         }
         else {
             console.log("border");
         }
-        //check right
         if ((index + 1) % gridSize !== 0) {
             console.log("cheking " + (index + 1));
         }
         else {
             console.log("border");
         }
-        // check up
         if (index >= gridSize) {
             console.log("checking " + (index - gridSize));
         }
         else {
             console.log("border");
         }
-        // check down
         if (index < gridSize * (gridSize - 1)) {
             console.log("checking " + (index + gridSize));
             let selectedTile = tileElementList[index];
             let tileDown = tileElementList[index + gridSize];
             let tileDownElements = [];
-            //Chekc the if the tile is possilbe on the right
-            //This are the posssabilities
             for (let i = 0; i < selectedTile.possibleTiles.length; i++) {
-                //get all the tilese of the checked tile
                 for (let s = 0; s < tileDown.possibleTiles.length; s++) {
                     let downAccepted = selectedTile.possibleTiles[i].down;
                     let upAcceptetd = tileDown.possibleTiles[s].up;
-                    /// only tile 1 is right? Which is wrong!
                     upAcceptetd.forEach(up => {
                         downAccepted.forEach(down => {
                             if (down.tile === up.tile && down.rotation === up.rotation) {
@@ -230,6 +185,5 @@ var wfc;
             console.log("border");
         }
     }
-    //fix tileList -> make objetct to save the Entropy and if the tile is collapsed
 })(wfc || (wfc = {}));
 //# sourceMappingURL=WFC.js.map

@@ -103,6 +103,10 @@ namespace WFC2 {
     console.log("----");
   }
 
+  async function Sleeping(milliseconds: number): Promise<unknown> {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  }
+
   async function start(): Promise<void> {
     do {
       console.log("--WAVE START--");
@@ -110,7 +114,7 @@ namespace WFC2 {
       wafeFunction();
       //console.log(frames);
       console.log("--WAVE END--");
-      await Sleep(3000);
+      await Sleeping(3000);
     } while (!waveColapsed); // !waveColapsed
   }
 
@@ -468,8 +472,4 @@ namespace WFC2 {
       }
     }
   }
-}
-
-function Sleep(milliseconds: number) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }

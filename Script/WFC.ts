@@ -1,10 +1,9 @@
 /**
  * @author Arthur Erlich
- * 
+ *
  */
 
 namespace WFC3 {
-
   let canvasDIM: number = 500;
   let frameCount: number = 10;
   const logging: boolean = false;
@@ -24,7 +23,6 @@ namespace WFC3 {
     }
   }
   customElements.define("custom-frame", Frame);
-
 
   class Tile {
     index: number;
@@ -61,6 +59,7 @@ namespace WFC3 {
   interface Config {
     tilesX: number;
     canvasDimPX: number;
+    waitTime: number;
   }
 
   const tiles: Tile[] = [
@@ -74,6 +73,10 @@ namespace WFC3 {
     new Tile(3, 0, "../images/corner.png"),
     //CornerTile down, left
     new Tile(4, 1, "../images/corner.png"),
+    //CornerTile  left, up
+    new Tile(5, 2, "../images/corner.png"),
+    //CornerTile up, right
+    new Tile(6, 3, "../images/corner.png"),
   ];
   //Setting compatible options for Tiles Searching for better listing!
 
@@ -107,6 +110,18 @@ namespace WFC3 {
   tiles[4].down = "010";
   tiles[4].left = "010";
 
+  //CronerTile  left, up
+  tiles[5].up = "010";
+  tiles[5].right = "000";
+  tiles[5].down = "000";
+  tiles[5].left = "010";
+
+  //CronerTile  up, right
+  tiles[6].up = "010";
+  tiles[6].right = "010";
+  tiles[6].down = "000";
+  tiles[6].left = "000";
+
   //----Start of Render----\\
   main();
   async function main(): Promise<void> {
@@ -114,20 +129,24 @@ namespace WFC3 {
     frameCount = config.tilesX;
     canvasDIM = config.canvasDimPX;
     setup();
-    // initFrame();
+    initFrame();
     drawCanvas();
-    //should be in a loop until everything is collapsed
     //Calculate Entropy to other tiles
-    // calculateEntropy();
-    // waveFunction();
+    let isNotColapsed: boolean = true;
+    while (isNotColapsed) {
+      calculateEntropy();
+      drawCanvas();
+      isNotColapsed = !waveFunction();
+      if (config.waitTime > 0) {
+        await Sleep(config.waitTime);
+      }
+    }
   }
-
-
-  document.body.addEventListener("click", (event) => {
-    // console.clear();
-    calculateEntropy();
-    drawCanvas();
-  });
+  // document.body.addEventListener("click", (event) => {
+  //   // console.clear();
+  //   calculateEntropy();
+  //   drawCanvas();
+  // });
 
   function setup(): void {
     createCanvas();
@@ -135,13 +154,15 @@ namespace WFC3 {
   }
 
   function initFrame(): void {
-    let frame = frameElements[12]; //Math.round((frameCount * frameCount) / 2)
-    frame.options = [tiles[1]];
+    let frame = frameElements[Math.round(Math.random() * (frameCount * frameCount))];
+    frame.options = [tiles[0]];
   }
 
   function drawCanvas(): void {
     frameElements.forEach((element) => {
-      element.innerText = element.options.length.toString();
+      if (logging) {
+        element.innerText = element.options.length.toString();
+      }
       if (isColapsed(element)) {
         drawImage(element);
       }
@@ -186,31 +207,30 @@ namespace WFC3 {
         frameElements[i] = element;
         canvas.appendChild(element);
         i++;
-        element.addEventListener("mousedown", (event) => {
-          element.classList.add("selected");
-          let target: Frame = event.target as Frame;
-          let index: number = Math.floor(Math.random() * target.options.length);
-          if (logging) {
-            console.log(target);
-            console.log(target.options);
-            console.log("Selection Tile with Frame", index);
-          }
+        if (logging) {
+          element.addEventListener("mousedown", (event) => {
+            element.classList.add("selected");
 
-          target.options = [target.options[index]];
-        });
-        element.addEventListener("mouseup", () => {
-          element.classList.remove("selected");
-        });
-        element.addEventListener("mouseleave", () => {
-          element.classList.remove("selected");
-        });
+            let target: Frame = event.target as Frame;
+            console.log("Selection", target, " Tiles Frame has those Options", target.options);
+          });
+          element.addEventListener("mouseup", () => {
+            element.classList.remove("selected");
+          });
+          element.addEventListener("mouseleave", () => {
+            element.classList.remove("selected");
+          });
+        }
       }
     }
   }
 
   function isColapsed(frame: Frame): boolean {
-    frame.dataset.colapsed = "true";
-    return frame.options.length == 1;
+    if (frame.options.length == 1) {
+      frame.dataset.colapsed = "true";
+      return true;
+    }
+    return false;
   }
 
   function drawImage(frame: Frame): void {
@@ -221,47 +241,44 @@ namespace WFC3 {
 
   function waveFunction(): boolean {
     //List of Frames with least entropy to be colapsed
-    let toColapseFrames: Set<Frame> = new Set<Frame>();
+    let notColapseFrames: Set<Frame> = new Set<Frame>();
+    let toColapseFrames: Array<Frame> = [];
     let leastEntropy = tiles.length; //start with maximum
+    //Check every Frame if one is colapsed
+    let colapsedFrames: number = 0;
+    for (let i = 0; i < frameElements.length; i++) {
+      if (isColapsed(frameElements[i])) {
+        colapsedFrames++;
+        continue;
+      } else {
+        notColapseFrames.add(frameElements[i]);
+      }
+    }
 
-    // //Check every Frame if one is colapsed
-    // for (let i = 0; i < frameElements.length; i++) {
-    //   const frame = frameElements[i];
-    //   //Check if Frame has only one Option
+    //find least entropy
+    notColapseFrames.forEach((frame) => {
+      if (frame.options.length < leastEntropy) {
+        leastEntropy = frame.options.length;
+      }
+    });
 
-    //   if (isColapse(frame)) {
-    // if (i == frameElements.length - 1){
-    //   return true;
-    // }
-    //      continue;
-    //   }
+    //chose frame with more then least entropy
+    notColapseFrames.forEach((frame) => {
+      if (frame.options.length == leastEntropy) {
+        toColapseFrames.push(frame);
+      }
+    });
 
-    //   //start to get tile wiht last entorpy / options
-    //   console.log("Start Entropy: ", leastEntropy);
-
-    //   for (let i = 0; i < frameElements.length; i++) {
-    //     const frame = frameElements[i];
-    //     if (!isColapse(frame)) {
-    //       if (frame.options.length < leastEntropy) {
-    //         leastEntropy = frame.options.length;
-    //       }
-    //     }
-    //   }
-    //   console.log("Smallest Entropy: ", leastEntropy);
-
-    //   //add tile to list with least entropy/options
-    //   if (frame.options.length === leastEntropy) {
-    //     toColapseFrames.add(frame);
-    //   }
-
-    //   //now start the colaps of frames
-    //   if (toColapseFrames.size < 1) {
-    //     console.log("Found frames to Colaps: ", toColapseFrames);
-
-    //     return true;
-    //   }
-    // }
-    return false;
+    if (toColapseFrames.length == 0) {
+      return true;
+    }
+    if (toColapseFrames.length == 1) {
+      setRendomFrameOption(toColapseFrames[0]);
+    } else {
+      let selectedFrame: Frame = toColapseFrames[Math.round(Math.random() * (toColapseFrames.length - 1))];
+      setRendomFrameOption(selectedFrame);
+    }
+    return colapsedFrames == frameElements.length;
   }
 
   function calculateEntropy(): void {
@@ -285,7 +302,6 @@ namespace WFC3 {
         if (checkFrame(frame, Directions.LEFT)) {
           updatedTiles++;
         }
-
       }
       updatedTiles--;
     } while (updatedTiles > 0);
@@ -365,7 +381,6 @@ namespace WFC3 {
       if (logging) {
         console.warn("There was a problem! \n one of the check has only 0 Frames!? Something went realy wrong");
       }
-
     }
 
     switch (direction) {
@@ -465,7 +480,7 @@ namespace WFC3 {
       if (logging) {
         console.log("Found a Compatible Tile. Adding to List: ", b);
       }
-      possibleOptions.push(tile);//TODOO: Add Tile of Options
+      possibleOptions.push(tile); //TODOO: Add Tile of Options
     }
     return possibleOptions;
   }
@@ -484,4 +499,11 @@ namespace WFC3 {
     promise = await fetch(url);
     return promise.json();
   }
+
+  function setRendomFrameOption(frame: Frame): void {
+    frame.options = [frame.options[Math.round(Math.random() * (frame.options.length - 1))]];
+  }
+}
+async function Sleep(milliseconds: number): Promise<unknown> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }

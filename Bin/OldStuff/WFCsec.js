@@ -23,38 +23,28 @@ var WFC2;
     }
     const canvasDIM = 800;
     const frameCount = 10;
-    //Canvas and Frames setup
     const canvas = document.createElement("div");
     const frameElements = new Array(frameCount * frameCount);
     const frames = new Array(frameCount * frameCount);
     const tiles = [
-        //BlankTile
         new Tile(0, 0, "../images/blank.png"),
-        //StrightTile
         new Tile(1, 0, "../images/stright.png"),
-        //StrightTile 90°
         new Tile(2, 1, "../images/stright.png"),
-        //CronerTile right, down
         new Tile(3, 0, "../images/corner.png"),
     ];
     let waveColapsed = false;
-    //setting compatible options for Tiles Searching for better listing!
-    //BlankTile
     tiles[0].up = new Set([tiles[0], tiles[2]]);
     tiles[0].right = new Set([tiles[0], tiles[1]]);
     tiles[0].down = new Set([tiles[0], tiles[2]]);
     tiles[0].left = new Set([tiles[0], tiles[1]]);
-    //StrightTile |
     tiles[1].up = new Set([tiles[1], tiles[3]]);
     tiles[1].right = new Set([tiles[1], tiles[0]]);
     tiles[1].down = new Set([tiles[1]]);
     tiles[1].left = new Set([tiles[1], tiles[0]]);
-    //StrightTile - 90°
     tiles[2].up = new Set([tiles[2], tiles[0]]);
     tiles[2].right = new Set([tiles[2]]);
     tiles[2].down = new Set([tiles[2], tiles[0]]);
     tiles[2].left = new Set([tiles[2], tiles[3]]);
-    //CronerTile right, down
     tiles[3].up = new Set([tiles[0], tiles[1]]);
     tiles[3].right = new Set([tiles[2]]);
     tiles[3].down = new Set([tiles[1]]);
@@ -62,10 +52,7 @@ var WFC2;
     let pause = true;
     document.body.addEventListener("click", () => {
         console.log("--WAVE Clicked--");
-        // checkFrameSides(1);
-        // checkFrameSides(6);
         if (waveColapsed) {
-            // location.reload();
         }
         else {
             start();
@@ -76,21 +63,22 @@ var WFC2;
     draw();
     start();
     draw();
-    //test stuff
     if (logging) {
         console.log("all Frames:");
         console.log(frames);
         console.log("----");
+    }
+    async function Sleeping(milliseconds) {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
     }
     async function start() {
         do {
             console.log("--WAVE START--");
             draw();
             wafeFunction();
-            //console.log(frames);
             console.log("--WAVE END--");
-            await Sleep(3000);
-        } while (!waveColapsed); // !waveColapsed
+            await Sleeping(3000);
+        } while (!waveColapsed);
     }
     function setup() {
         createCanvas();
@@ -99,11 +87,9 @@ var WFC2;
         let randomTileID = Math.floor(Math.random() * tiles.length);
         let randomOptionID = Math.floor(Math.random() * frames[randomTileID].options.length);
         frames[randomTileID].options = [frames[randomTileID].options[randomOptionID]];
-        //colapsTiles();
         draw();
     }
     function draw() {
-        //drawFrame(TILE);
         for (let i = 0; i < frames.length; i++) {
             if (isColapse(frames[i])) {
                 try {
@@ -112,7 +98,6 @@ var WFC2;
                 catch (error) {
                     console.error(error);
                     stop();
-                    //   location.reload();
                 }
             }
             drawFrameOptions(i, frames[i].options.length);
@@ -148,8 +133,6 @@ var WFC2;
             element.style.backgroundSize = "cover";
             element.style.border = "1px solid black";
             element.style.flex;
-            //element.innerText = i.toString();
-            //element.style.color = "white";
             frameElements[i] = element;
             canvas.appendChild(element);
         }
@@ -162,22 +145,17 @@ var WFC2;
                 colapsedFrames++;
             }
         }
-        //check if all frames are colapsed
         if (colapsedFrames == frameCount * frameCount) {
             waveColapsed = true;
             console.warn("All Frames are colapsed");
-            //location.reload();
         }
-        // check if one Frame has zero option
         frames.forEach((frame) => {
             if (frame.options.length === 0) {
                 waveColapsed = true;
                 console.error("Frame has no options");
                 draw();
-                //location.reload();
             }
         });
-        //start to get tile wiht last entorpy / options
         let minOpt = tiles.length + 1;
         for (let i = 0; i < frames.length; i++) {
             if (!isColapse(frames[i])) {
@@ -195,7 +173,6 @@ var WFC2;
             console.log(toColapseFrames);
         }
         if (toColapseFrames.size > 1) {
-            //randomly select one of the tiles
             const randomFrameID = Array.from(toColapseFrames)[Math.floor(Math.random() * toColapseFrames.size)];
             checkFrameSidesCW(randomFrameID);
             checkFrameSidesCCW(randomFrameID);
@@ -211,7 +188,6 @@ var WFC2;
                 console.log(randomOption);
                 console.log(randomOptionID);
             }
-            //set the frame options to the selected tile
             frames[randomFrameID].options = new Array(randomOption);
         }
         else if (toColapseFrames.size == 1) {
@@ -245,14 +221,12 @@ var WFC2;
     function isColapse(frame) {
         return frame.options.length == 1;
     }
-    //TODO: check if optoins of Frames is compatible with tiles.
     function checkTopFrame(index) {
         if (logging) {
             console.log("compare frames around: " + index);
             console.log(frames[index]);
         }
         if (index >= frameCount) {
-            //top side
             if (logging) {
                 console.log("----");
                 console.log("top side");
@@ -265,7 +239,6 @@ var WFC2;
     }
     function checkLeftFrame(index) {
         if (index % frameCount !== 0) {
-            //left side
             if (logging) {
                 console.log("----");
                 console.log("left side");
@@ -277,7 +250,6 @@ var WFC2;
     }
     function checkRightFrame(index) {
         if ((index + 1) % frameCount !== 0) {
-            //right side
             if (logging) {
                 console.log("----");
                 console.log("right side");
@@ -289,7 +261,6 @@ var WFC2;
     }
     function checkBottomFrame(index) {
         if (index < frameCount * (frameCount - 1)) {
-            //bottom side
             if (logging) {
                 console.log("----");
                 console.log("bottom side");
@@ -314,13 +285,11 @@ var WFC2;
     function setOptions(index, options) {
         frames[index].options = options;
     }
-    //--------------------compare and set options--------------------------------
     function compareAndSetOptions(a, b, direction) {
         let aOpt = new Set();
         switch (direction) {
             case "top":
                 if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
-                    //console.log("bottom side is equal ro top side");
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
@@ -338,7 +307,6 @@ var WFC2;
                 break;
             case "right":
                 if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
-                    // console.log("bottom side is equal ro top side");
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
@@ -356,7 +324,6 @@ var WFC2;
                 break;
             case "bottom":
                 if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
-                    // console.log("bottom side is equal ro top side");
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
@@ -374,7 +341,6 @@ var WFC2;
                 break;
             case "left":
                 if (JSON.stringify(a.options) == JSON.stringify(b.options)) {
-                    // console.log("bottom side is equal ro top side");
                     return;
                 }
                 for (let indexA = 0; indexA < a.options.length; indexA++) {
@@ -411,7 +377,4 @@ var WFC2;
         }
     }
 })(WFC2 || (WFC2 = {}));
-function Sleep(milliseconds) {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
 //# sourceMappingURL=WFCsec.js.map

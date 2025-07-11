@@ -125,7 +125,7 @@ namespace WFC3 {
   //----Start of Render----\\
   main();
   async function main (): Promise<void> {
-    let config = await loadConfig("config.json");
+    let config = await loadConfig("/script/config.json");
     frameCount = config.tilesX;
     canvasDIM = config.canvasDimPX;
     setup();

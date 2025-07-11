@@ -1,5 +1,5 @@
 /**
- * @author Arthur Erlich
+ * @author Arthur Erlich <work@arhuterlich.de>
  *
  */
 
@@ -124,8 +124,8 @@ namespace WFC3 {
 
   //----Start of Render----\\
   main();
-  async function main(): Promise<void> {
-    let config = await loadConfig("/Script/config.json");
+  async function main (): Promise<void> {
+    let config = await loadConfig("config.json");
     frameCount = config.tilesX;
     canvasDIM = config.canvasDimPX;
     setup();
@@ -148,17 +148,17 @@ namespace WFC3 {
   //   drawCanvas();
   // });
 
-  function setup(): void {
+  function setup (): void {
     createCanvas();
     createFrameElement();
   }
 
-  function initFrame(): void {
+  function initFrame (): void {
     let frame = frameElements[Math.round(Math.random() * (frameCount * frameCount))];
     frame.options = [tiles[0]];
   }
 
-  function drawCanvas(): void {
+  function drawCanvas (): void {
     frameElements.forEach((element) => {
       if (logging) {
         element.innerText = element.options.length.toString();
@@ -169,7 +169,7 @@ namespace WFC3 {
     });
   }
 
-  function createCanvas(): void {
+  function createCanvas (): void {
     canvas.setAttribute("id", "canvas");
     canvas.style.width = canvasDIM + "px";
     canvas.style.height = canvasDIM + "px";
@@ -179,7 +179,7 @@ namespace WFC3 {
     document.body.appendChild(canvas);
   }
 
-  function createFrameElement(): void {
+  function createFrameElement (): void {
     let i: number = 0;
     for (let y: number = 0; y < frameCount; y++) {
       for (let x: number = 0; x < frameCount; x++) {
@@ -225,7 +225,7 @@ namespace WFC3 {
     }
   }
 
-  function isColapsed(frame: Frame): boolean {
+  function isColapsed (frame: Frame): boolean {
     if (frame.options.length == 1) {
       frame.dataset.colapsed = "true";
       return true;
@@ -233,13 +233,13 @@ namespace WFC3 {
     return false;
   }
 
-  function drawImage(frame: Frame): void {
+  function drawImage (frame: Frame): void {
     //get the iomage form the ony possible tile.
     frame.style.backgroundImage = "URL(" + frame.options[0].image + ")";
     frame.style.transform = "rotate(" + frame.options[0].rotation * 90 + "deg )";
   }
 
-  function waveFunction(): boolean {
+  function waveFunction (): boolean {
     //List of Frames with least entropy to be colapsed
     let notColapseFrames: Set<Frame> = new Set<Frame>();
     let toColapseFrames: Array<Frame> = [];
@@ -281,7 +281,7 @@ namespace WFC3 {
     return colapsedFrames == frameElements.length;
   }
 
-  function calculateEntropy(): void {
+  function calculateEntropy (): void {
     //Stort from left to right, keep treack of changed tiles and rerun if tiles changed.
     let updatedTiles: number = 0;
     do {
@@ -306,7 +306,7 @@ namespace WFC3 {
       updatedTiles--;
     } while (updatedTiles > 0);
   }
-  function checkFrame(frame: Frame, direction: Directions): boolean {
+  function checkFrame (frame: Frame, direction: Directions): boolean {
     let neighbor: Frame;
     let neighborIndex;
     let isChanged = false;
@@ -361,7 +361,7 @@ namespace WFC3 {
     return isChanged;
   }
 
-  function compareAndGetOptions(frame: Frame, neighbor: Frame, direction: Directions): Tile[] {
+  function compareAndGetOptions (frame: Frame, neighbor: Frame, direction: Directions): Tile[] {
     let possibleOptions: Tile[] = new Array();
     //Compare the sides with allowd option
     //go through all Options and compare the Sets
@@ -474,7 +474,7 @@ namespace WFC3 {
     return possibleOptions;
   }
 
-  function compareFrameOptions(a: string, b: string, tile: Tile): Tile[] {
+  function compareFrameOptions (a: string, b: string, tile: Tile): Tile[] {
     let possibleOptions: Tile[] = new Array();
     if (a === b) {
       if (logging) {
@@ -485,7 +485,7 @@ namespace WFC3 {
     return possibleOptions;
   }
 
-  function addElementIfNotExist(option: Tile[], possibleOptions: Tile[]) {
+  function addElementIfNotExist (option: Tile[], possibleOptions: Tile[]) {
     option.forEach((element) => {
       let found: Tile | undefined = possibleOptions.find((obj) => obj.index === element.index);
       //add element to options only if its not exist
@@ -494,16 +494,16 @@ namespace WFC3 {
       }
     });
   }
-  async function loadConfig(url: string): Promise<Config> {
+  async function loadConfig (url: string): Promise<Config> {
     let promise;
     promise = await fetch(url);
     return promise.json();
   }
 
-  function setRendomFrameOption(frame: Frame): void {
+  function setRendomFrameOption (frame: Frame): void {
     frame.options = [frame.options[Math.round(Math.random() * (frame.options.length - 1))]];
   }
 }
-async function Sleep(milliseconds: number): Promise<unknown> {
+async function Sleep (milliseconds: number): Promise<unknown> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
